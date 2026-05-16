@@ -11,7 +11,7 @@ if (!supabaseUrl || !supabaseAnon) {
 
 export const supabase = createClient(supabaseUrl ?? 'https://placeholder.supabase.co', supabaseAnon ?? 'placeholder')
 
-// ─── Devotionals ─────────────────────────────────────────────────────────────
+// --- Devotionals -------------------------------------------------------------
 export const devotionalsApi = {
   getPublished: () =>
     supabase
@@ -51,7 +51,7 @@ export const devotionalsApi = {
     supabase.from('devotionals').delete().eq('id', id),
 }
 
-// ─── Comments ────────────────────────────────────────────────────────────────
+// --- Comments ----------------------------------------------------------------
 export const commentsApi = {
   getApproved: (devotionalId: string) =>
     supabase
@@ -78,7 +78,7 @@ export const commentsApi = {
     supabase.from('comments').delete().eq('id', id),
 }
 
-// ─── Reactions ───────────────────────────────────────────────────────────────
+// --- Reactions ---------------------------------------------------------------
 export const reactionsApi = {
   toggle: (devotionalId: string, reactionType: string, deviceId: string) =>
     supabase.rpc('toggle_reaction', {
@@ -98,7 +98,7 @@ export const reactionsApi = {
       .eq('device_id', deviceId),
 }
 
-// ─── Prayer Requests ─────────────────────────────────────────────────────────
+// --- Prayer Requests ---------------------------------------------------------
 export const prayerApi = {
   getPublicApproved: () =>
     supabase
@@ -118,7 +118,7 @@ export const prayerApi = {
     supabase.from('prayer_requests').update({ status }).eq('id', id),
 }
 
-// ─── Announcements ────────────────────────────────────────────────────────────
+// --- Announcements ------------------------------------------------------------
 export const announcementsApi = {
   getActive: () =>
     supabase
@@ -142,7 +142,7 @@ export const announcementsApi = {
     supabase.from('announcements').delete().eq('id', id),
 }
 
-// ─── Push Subscriptions ──────────────────────────────────────────────────────
+// --- Push Subscriptions ------------------------------------------------------
 export const pushApi = {
   save: (sub: PushSubscriptionJSON, deviceId: string) =>
     supabase.from('push_subscriptions').upsert({
@@ -161,7 +161,7 @@ export const pushApi = {
     supabase.from('push_subscriptions').update({ active: false }).eq('endpoint', endpoint),
 }
 
-// ─── Storage ─────────────────────────────────────────────────────────────────
+// --- Storage -----------------------------------------------------------------
 export const storageApi = {
   uploadAudio: async (file: Blob, path: string) => {
     const { data, error } = await supabase.storage
@@ -192,9 +192,50 @@ export const storageApi = {
 
   getMusicLibrary: () =>
     supabase.from('background_music').select('*').order('created_at', { ascending: false }),
+
+  uploadPdf: async (file: File, path: string) => {
+    const { data, error } = await supabase.storage
+      .from('financial-reports')
+      .upload(path, file, { contentType: 'application/pdf', upsert: true })
+    if (error) throw error
+    const { data: urlData } = supabase.storage.from('financial-reports').getPublicUrl(data.path)
+    return urlData.publicUrl
+  },
+
+  deletePdf: async (path: string) => {
+    const { error } = await supabase.storage.from('financial-reports').remove([path])
+    if (error) throw error
+  },
 }
 
-// ─── Dashboard Stats ─────────────────────────────────────────────────────────
+// --- Financial Reports -------------------------------------------------------
+export const financialReportsApi = {
+  getPublished: () =>
+    supabase
+      .from('financial_reports')
+      .select('*')
+      .eq('status', 'published')
+      .order('reference_year', { ascending: false })
+      .order('reference_month', { ascending: false }),
+
+  getAll: () =>
+    supabase
+      .from('financial_reports')
+      .select('*')
+      .order('reference_year', { ascending: false })
+      .order('reference_month', { ascending: false }),
+
+  create: (data: Record<string, unknown>) =>
+    supabase.from('financial_reports').insert(data).select().single(),
+
+  update: (id: string, data: Record<string, unknown>) =>
+    supabase.from('financial_reports').update(data).eq('id', id).select().single(),
+
+  delete: (id: string) =>
+    supabase.from('financial_reports').delete().eq('id', id),
+}
+
+// --- Dashboard Stats ---------------------------------------------------------
 export const dashboardApi = {
   getStats: () => supabase.rpc('get_dashboard_stats'),
 }

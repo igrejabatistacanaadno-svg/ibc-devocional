@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, BookOpen, Mic, Music, MessageSquare,
-  Heart, Bell, Megaphone, Settings, LogOut, Menu, X,
+  Heart, Bell, Megaphone, Settings, LogOut, Menu, X, Landmark,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
@@ -11,11 +11,12 @@ const adminNav = [
   { to: '/admin/devocionais',      label: 'Devocionais',       icon: BookOpen         },
   { to: '/admin/nova-devocional',  label: 'Nova devocional',   icon: Mic              },
   { to: '/admin/musicas',          label: 'Biblioteca musical',icon: Music            },
-  { to: '/admin/comentarios',      label: 'Comentarios',       icon: MessageSquare    },
-  { to: '/admin/oracao',           label: 'Pedidos de oracao', icon: Heart            },
+  { to: '/admin/comentarios',      label: 'Comentários',       icon: MessageSquare    },
+  { to: '/admin/oracao',           label: 'Pedidos de oração', icon: Heart            },
   { to: '/admin/avisos',           label: 'Avisos',            icon: Megaphone        },
-  { to: '/admin/notificacoes',     label: 'Notificacoes',      icon: Bell             },
-  { to: '/admin/configuracoes',    label: 'Configuracoes',     icon: Settings         },
+  { to: '/admin/tesouraria',       label: 'Tesouraria',        icon: Landmark         },
+  { to: '/admin/notificacoes',     label: 'Notificações',      icon: Bell             },
+  { to: '/admin/configuracoes',    label: 'Configurações',     icon: Settings         },
 ]
 
 export default function AdminLayout() {
@@ -30,6 +31,7 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar - desktop */}
       <aside className={`
         fixed inset-y-0 left-0 z-50 w-64 bg-primary-900 text-white flex flex-col
         transition-transform duration-300
@@ -79,11 +81,14 @@ export default function AdminLayout() {
         </div>
       </aside>
 
+      {/* Overlay */}
       {open && (
         <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setOpen(false)} />
       )}
 
+      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar mobile */}
         <header className="lg:hidden flex items-center gap-3 px-4 h-14 bg-white border-b border-gray-100 sticky top-0 z-30">
           <button onClick={() => setOpen(true)} className="p-2 rounded-xl text-gray-500 hover:bg-gray-100">
             <Menu size={20} />

@@ -9,6 +9,7 @@ import DevotionalsListPage  from '@/pages/public/DevotionalsListPage'
 import PrayerPage           from '@/pages/public/PrayerPage'
 import AnnouncementsPage    from '@/pages/public/AnnouncementsPage'
 import MorePage             from '@/pages/public/MorePage'
+import TesourariaPage       from '@/pages/public/TesourariaPage'
 
 // Admin pages
 import AdminLoginPage        from '@/pages/admin/AdminLoginPage'
@@ -17,8 +18,9 @@ import NewDevotionalPage     from '@/pages/admin/NewDevotionalPage'
 import AdminDevotionalsPage  from '@/pages/admin/AdminDevotionalsPage'
 import AdminCommentsPage     from '@/pages/admin/AdminCommentsPage'
 import AdminPrayerPage       from '@/pages/admin/AdminPrayerPage'
-import AdminAnnouncementsPage from '@/pages/admin/AdminAnnouncementsPage'
-import EditDevotionalPage     from '@/pages/admin/EditDevotionalPage'
+import AdminAnnouncementsPage       from '@/pages/admin/AdminAnnouncementsPage'
+import EditDevotionalPage           from '@/pages/admin/EditDevotionalPage'
+import AdminFinancialReportsPage    from '@/pages/admin/AdminFinancialReportsPage'
 
 // Layouts
 import MemberLayout from '@/components/layout/MemberLayout'
@@ -41,28 +43,41 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={isChurchMember ? <Navigate to="/app" replace /> : <EntryPage />} />
+      {/* Entry */}
+      <Route
+        path="/"
+        element={isChurchMember ? <Navigate to="/app" replace /> : <EntryPage />}
+      />
+
+      {/* Member area */}
       <Route path="/app" element={<RequireMember><MemberLayout /></RequireMember>}>
         <Route index element={<HomePage />} />
-        <Route path="devocionais"    element={<DevotionalsListPage />} />
-        <Route path="devocional/:id" element={<DevotionalPage />} />
-        <Route path="oracao"         element={<PrayerPage />} />
-        <Route path="avisos"         element={<AnnouncementsPage />} />
-        <Route path="mais"           element={<MorePage />} />
+        <Route path="devocionais"         element={<DevotionalsListPage />} />
+        <Route path="devocional/:id"      element={<DevotionalPage />} />
+        <Route path="oracao"              element={<PrayerPage />} />
+        <Route path="avisos"              element={<AnnouncementsPage />} />
+        <Route path="mais"                element={<MorePage />} />
+        <Route path="tesouraria"          element={<TesourariaPage />} />
       </Route>
+
+      {/* Admin area */}
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
-        <Route index                         element={<AdminDashboardPage />} />
-        <Route path="devocionais"            element={<AdminDevotionalsPage />} />
-        <Route path="nova-devocional"        element={<NewDevotionalPage />} />
-        <Route path="editar-devocional/:id"  element={<EditDevotionalPage />} />
-        <Route path="comentarios"            element={<AdminCommentsPage />} />
-        <Route path="oracao"                 element={<AdminPrayerPage />} />
-        <Route path="avisos"                 element={<AdminAnnouncementsPage />} />
-        <Route path="musicas"                element={<div className="p-6 text-gray-500">Biblioteca musical - em breve</div>} />
-        <Route path="notificacoes"           element={<div className="p-6 text-gray-500">Notificações - em breve</div>} />
-        <Route path="configuracoes"          element={<div className="p-6 text-gray-500">Configurações - em breve</div>} />
+        <Route index                    element={<AdminDashboardPage />} />
+        <Route path="devocionais"       element={<AdminDevotionalsPage />} />
+        <Route path="nova-devocional"          element={<NewDevotionalPage />} />
+        <Route path="editar-devocional/:id"    element={<EditDevotionalPage />} />
+        <Route path="comentarios"       element={<AdminCommentsPage />} />
+        <Route path="oracao"            element={<AdminPrayerPage />} />
+        <Route path="avisos"            element={<AdminAnnouncementsPage />} />
+        <Route path="tesouraria"        element={<AdminFinancialReportsPage />} />
+        {/* Stubs for future pages */}
+        <Route path="musicas"           element={<div className="p-6 text-gray-500">Biblioteca musical - em breve</div>} />
+        <Route path="notificacoes"      element={<div className="p-6 text-gray-500">Notificações - em breve</div>} />
+        <Route path="configuracoes"     element={<div className="p-6 text-gray-500">Configurações - em breve</div>} />
       </Route>
+
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

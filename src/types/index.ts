@@ -1,4 +1,4 @@
-// ─── Devotional ──────────────────────────────────────────────────────────────
+// --- Devotional --------------------------------------------------------------
 export type DevotionalStatus = 'draft' | 'scheduled' | 'published'
 
 export interface Devotional {
@@ -23,7 +23,7 @@ export interface Devotional {
   comments_count?: number
 }
 
-// ─── Comment ─────────────────────────────────────────────────────────────────
+// --- Comment -----------------------------------------------------------------
 export type CommentStatus = 'pending' | 'approved' | 'hidden'
 
 export interface Comment {
@@ -36,7 +36,7 @@ export interface Comment {
   approved_at: string | null
 }
 
-// ─── Reaction ────────────────────────────────────────────────────────────────
+// --- Reaction ----------------------------------------------------------------
 export type ReactionType = 'amen' | 'edified'
 
 export interface Reaction {
@@ -47,7 +47,7 @@ export interface Reaction {
   created_at: string
 }
 
-// ─── Prayer Request ──────────────────────────────────────────────────────────
+// --- Prayer Request ----------------------------------------------------------
 export type PrayerVisibility = 'public' | 'private'
 export type PrayerStatus = 'pending' | 'approved' | 'prayed' | 'answered'
 
@@ -60,7 +60,7 @@ export interface PrayerRequest {
   created_at: string
 }
 
-// ─── Announcement ────────────────────────────────────────────────────────────
+// --- Announcement ------------------------------------------------------------
 export type AnnouncementPriority = 'normal' | 'important' | 'urgent'
 export type AnnouncementStatus = 'active' | 'inactive'
 
@@ -74,7 +74,7 @@ export interface Announcement {
   created_at: string
 }
 
-// ─── Push Subscription ───────────────────────────────────────────────────────
+// --- Push Subscription -------------------------------------------------------
 export interface PushSubscriptionRecord {
   id: string
   endpoint: string
@@ -86,7 +86,7 @@ export interface PushSubscriptionRecord {
   active: boolean
 }
 
-// ─── Admin User ───────────────────────────────────────────────────────────────
+// --- Admin User ---------------------------------------------------------------
 export interface AdminUser {
   id: string
   username: string
@@ -95,7 +95,7 @@ export interface AdminUser {
   created_at: string
 }
 
-// ─── Background Music ─────────────────────────────────────────────────────────
+// --- Background Music ---------------------------------------------------------
 export interface BackgroundMusic {
   id: string
   name: string
@@ -104,7 +104,7 @@ export interface BackgroundMusic {
   created_at: string
 }
 
-// ─── Mixer Settings ──────────────────────────────────────────────────────────
+// --- Mixer Settings ----------------------------------------------------------
 export interface MixerSettings {
   voiceVolume: number        // 0-1, default 1.0
   musicVolume: number        // 0-1, default 0.15
@@ -113,7 +113,7 @@ export interface MixerSettings {
   loopBackground: boolean    // default true
 }
 
-// ─── Notification Log ────────────────────────────────────────────────────────
+// --- Notification Log --------------------------------------------------------
 export interface NotificationLog {
   id: string
   devotional_id: string
@@ -122,7 +122,22 @@ export interface NotificationLog {
   sent_at: string
 }
 
-// ─── Dashboard Stats ─────────────────────────────────────────────────────────
+// --- Financial Report --------------------------------------------------------
+export type FinancialReportStatus = 'draft' | 'published' | 'hidden'
+
+export interface FinancialReport {
+  id: string
+  title: string
+  description: string | null
+  reference_month: number   // 1–12
+  reference_year: number
+  pdf_url: string
+  status: FinancialReportStatus
+  created_at: string
+  updated_at: string
+}
+
+// --- Dashboard Stats ---------------------------------------------------------
 export interface DashboardStats {
   devotionalToday: boolean
   totalDevotionals: number

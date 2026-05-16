@@ -59,7 +59,7 @@ export default function AdminDevotionalsPage() {
               </div>
             </div>
             <div className="flex gap-2 mt-3">
-              <Button size="sm" variant="secondary" icon={<Edit2 size={12} />}>
+              <Button size="sm" variant="secondary" icon={<Edit2 size={12} />} onClick={() => navigate(`/admin/editar-devocional/${d.id}`)}>
                 Editar
               </Button>
               <Button size="sm" variant="ghost" icon={<Trash2 size={12} />} onClick={() => handleDelete(d.id)} className="border border-red-200 text-red-600 hover:bg-red-50">

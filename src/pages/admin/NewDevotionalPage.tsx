@@ -13,6 +13,16 @@ const STEPS = ['Conteúdo', 'Áudio', 'Fundo Musical', 'Mixagem', 'Publicação'
 
 const useMock = !import.meta.env.VITE_SUPABASE_URL
 
+/** Extrai a extensão correta a partir do MIME type do Blob */
+function extFromBlob(blob: Blob): string {
+  const mime = blob.type || ''
+  if (mime.includes('mp4') || mime.includes('m4a')) return 'm4a'
+  if (mime.includes('ogg'))  return 'ogg'
+  if (mime.includes('wav'))  return 'wav'
+  if (mime.includes('aac'))  return 'aac'
+  return 'webm'
+}
+
 export default function NewDevotionalPage() {
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
@@ -43,37 +53,128 @@ export default function NewDevotionalPage() {
   }
 
   const handleSave = async () => {
+    // ── Etapa 1: Validações ──────────────────────────────────────────
+    if (!form.title.trim()) {
+      alert('O título da devocional é obrigatório.')
+      return
+    }
+    if (!form.devotional_text.trim() && !audioReady) {
+      alert('Informe a mensagem da devocional ou grave um áudio.')
+      return
+    }
+    if (form.status === 'scheduled') {
+      if (!form.publish_date) {
+        alert('Informe a data e horário de publicação para agendar.')
+        return
+      }
+      const scheduled = new Date(form.publish_date)
+      if (isNaN(scheduled.getTime())) {
+        alert('Data de publicação inválida.')
+        return
+      }
+      if (scheduled <= new Date()) {
+        alert('A data de agendamento deve ser no futuro.')
+        return
+      }
+    }
+
+    // ── Impede duplo clique ──────────────────────────────────────────
+    if (saving) return
     setSaving(true)
+
     try {
       let originalAudioUrl: string | null = null
       let mixedAudioUrl: string | null = null
 
       if (!useMock) {
         const id = uuidv4()
+
+        // ── Etapa 2: Verificação do áudio ──────────────────
+        if (audioReady && !voiceBlob) {
+          throw new Error('O áudio ainda está sendo processado. Aguarde um momento e tente novamente.')
+        }
+
+        // ── Etapa 3: Upload do áudio da voz ──────────────────
         if (voiceBlob) {
-          originalAudioUrl = await storageApi.uploadAudio(voiceBlob, `${id}/original.webm`)
+          const ext = extFromBlob(voiceBlob)
+          const audioPath = `devocional-${id}-original.${ext}`
+          try {
+            originalAudioUrl = await storageApi.uploadAudio(voiceBlob, audioPath)
+          } catch (audioErr) {
+            console.error('[Publicar] Erro ao enviar áudio gravado:', audioErr)
+            const detail = audioErr instanceof Error ? audioErr.message : String(audioErr)
+            if (detail.toLowerCase().includes('too large') || detail.includes('413')) {
+              throw new Error('Áudio muito grande para upload. Grave um áudio mais curto e tente novamente.')
+            }
+            if (detail.toLowerCase().includes('permission') || detail.includes('403')) {
+              throw new Error('Erro de permissão no storage. Verifique a configuração do bucket no Supabase.')
+            }
+            throw new Error(`Erro ao enviar o áudio gravado: ${detail}`)
+          }
         }
+
+        // ── Upload do áudio mixado (se houver) ────────────────
         if (mixedBlob) {
-          mixedAudioUrl = await storageApi.uploadAudio(mixedBlob, `${id}/mixed.wav`)
+          const ext = extFromBlob(mixedBlob)
+          const mixPath = `devocional-${id}-mixed.${ext}`
+          try {
+            mixedAudioUrl = await storageApi.uploadAudio(mixedBlob, mixPath)
+          } catch (mixErr) {
+            console.error('[Publicar] Erro ao enviar áudio mixado:', mixErr)
+            // Mixagem falhou mas não impede a publicação — usa só o áudio original
+            console.warn('[Publicar] Continuando sem áudio mixado.')
+            mixedAudioUrl = null
+          }
         }
-        const { data, error } = await devotionalsApi.create({
+
+        // ── Etapa 4: Salvar devocional no banco ─────────────────
+        // Para "Publicar agora", usa o horário exato da publicação
+        const publishDate = form.status === 'published'
+          ? new Date().toISOString()
+          : new Date(form.publish_date).toISOString()
+
+        const { data, error: saveError } = await devotionalsApi.create({
           ...form,
           id,
-          publish_date: new Date(form.publish_date).toISOString(),
+          publish_date: publishDate,
           original_audio_url: originalAudioUrl,
           mixed_audio_url: mixedAudioUrl,
         })
-        if (error) throw error
+
+        if (saveError) {
+          console.error('[Publicar] Erro ao salvar devocional no banco:', saveError)
+          const detail = saveError.message || String(saveError)
+          if (detail.includes('duplicate') || detail.includes('unique')) {
+            throw new Error('Já existe uma devocional com este título nesta data.')
+          }
+          if (detail.toLowerCase().includes('permission') || detail.includes('403')) {
+            throw new Error('Erro de permissão no banco de dados. Verifique as políticas RLS do Supabase.')
+          }
+          throw new Error(`Erro ao salvar a devocional: ${detail}`)
+        }
+
+        // ── Etapa 5: Notificação push (NÃO bloqueia o sucesso se falhar) ──
         if (form.send_notification && form.status === 'published' && data) {
-          await sendPushNotification(data.id, form.title)
+          try {
+            await sendPushNotification(data.id, form.title)
+          } catch (pushErr) {
+            // Push falhou — a devocional já está salva com sucesso
+            console.error('[Publicar] Notificação push falhou (devocional salva com sucesso):', pushErr)
+            // Não relaça o erro — o fluxo continua normalmente
+          }
         }
       }
 
-      alert('Devocional salva com sucesso! 🙏')
+      // ── Sucesso ──────────────────────────────────────────────────────
+      alert('Devocional publicada com sucesso! 🙏')
       navigate('/admin/devocionais')
+
     } catch (err) {
-      console.error(err)
-      alert('Erro ao salvar. Verifique o console.')
+      const msg = err instanceof Error
+        ? err.message
+        : 'Erro inesperado ao salvar. Verifique o console para mais detalhes.'
+      console.error('[Publicar] Erro ao publicar devocional:', err)
+      alert(msg)
     } finally {
       setSaving(false)
     }
@@ -235,11 +336,15 @@ export default function NewDevotionalPage() {
             size="lg"
             fullWidth
             loading={saving}
+            disabled={saving}
             icon={<Send size={16} />}
             onClick={handleSave}
           >
-            {form.status === 'published' ? 'Publicar devocional' :
-             form.status === 'scheduled' ? 'Agendar publicação' : 'Salvar rascunho'}
+            {saving
+              ? 'Publicando...'
+              : form.status === 'published' ? 'Publicar devocional'
+              : form.status === 'scheduled' ? 'Agendar publicação'
+              : 'Salvar rascunho'}
           </Button>
         </Card>
       )}

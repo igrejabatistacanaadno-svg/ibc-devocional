@@ -43,6 +43,23 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET and chrome-extension
   if (request.method !== 'GET' || url.protocol === 'chrome-extension:') return
 
+  // ── Navegação SPA — sempre retorna index.html (resolve 404 no pull-to-refresh) ──
+  // request.mode === 'navigate' cobre pull-to-refresh, reload e abertura direta de URL
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      caches.match('/index.html').then(cached => {
+        if (cached) return cached
+        // Tenta buscar na rede; se falhar, retorna shell básico
+        return fetch('/index.html').catch(() =>
+          new Response('<html><body>Sem conexão</body></html>', {
+            headers: { 'Content-Type': 'text/html' },
+          })
+        )
+      })
+    )
+    return
+  }
+
   // Supabase/API calls — Network First
   if (url.hostname.includes('supabase.co')) {
     event.respondWith(

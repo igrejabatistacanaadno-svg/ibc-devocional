@@ -3,13 +3,18 @@
  * Estratégia: Cache First para assets estáticos, Network First para API
  */
 
-const CACHE_NAME = 'ibc-devocional-v1'
+// Precache manifest injetado pelo vite-plugin-pwa no build (substituído em produção)
+// eslint-disable-next-line no-undef
+const WB_MANIFEST = self.__WB_MANIFEST || []
+
+const CACHE_NAME = 'ibc-devocional-v2'
 const OFFLINE_URL = '/offline.html'
 
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  ...WB_MANIFEST.map(entry => (typeof entry === 'string' ? entry : entry.url)),
 ]
 
 // ─── Install ──────────────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import { ptBR } from 'date-fns/locale'
 import { devotionalsApi, announcementsApi } from '@/lib/supabase'
 import { MOCK_DEVOTIONALS, MOCK_ANNOUNCEMENTS } from '@/lib/mockData'
 import { subscribeToPush, isPushSubscribed, isPushSupported, isIOS } from '@/lib/pushNotifications'
+import type { PushSubscribeResult } from '@/lib/pushNotifications'
 import type { Devotional, Announcement } from '@/types'
 import AudioPlayer from '@/components/devotional/AudioPlayer'
 import Card from '@/components/ui/Card'
@@ -26,12 +27,14 @@ export default function HomePage() {
   const [recent, setRecent] = useState<Devotional[]>([])
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
   const [pushStatus, setPushStatus] = useState<PushStatus>('idle')
+  const [pushErrorMsg, setPushErrorMsg] = useState<string>('')
   const [iosPrompt, setIosPrompt] = useState(false)
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [appInstalled, setAppInstalled] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
+    // Dados
     if (useMock) {
       setTodayDevotional(MOCK_DEVOTIONALS[0])
       setRecent(MOCK_DEVOTIONALS.slice(1))
@@ -41,28 +44,67 @@ export default function HomePage() {
       devotionalsApi.getPublished().then(({ data }) => data && setRecent(data.slice(1, 4)))
       announcementsApi.getActive().then(({ data }) => data && setAnnouncements(data.slice(0, 3)))
     }
-    isPushSubscribed().then(subscribed => { if (subscribed) setPushStatus('success') })
-    const handleBeforeInstall = (e: Event) => { e.preventDefault(); setDeferredPrompt(e as BeforeInstallPromptEvent) }
-    const handleAppInstalled = () => { setAppInstalled(true); setDeferredPrompt(null) }
+
+    // Estado inicial das notificações
+    isPushSubscribed().then(subscribed => {
+      if (subscribed) setPushStatus('success')
+    })
+
+    // Captura o evento de instalação PWA no Android/Chrome
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault()
+      setDeferredPrompt(e as BeforeInstallPromptEvent)
+    }
+    const handleAppInstalled = () => {
+      setAppInstalled(true)
+      setDeferredPrompt(null)
+    }
     window.addEventListener('beforeinstallprompt', handleBeforeInstall)
     window.addEventListener('appinstalled', handleAppInstalled)
-    if (window.matchMedia('(display-mode: standalone)').matches) setAppInstalled(true)
+
+    // Verifica se já está instalado (modo standalone)
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setAppInstalled(true)
+    }
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
       window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [])
 
+  // ── Ativar notificações push ───────────────────────────────────────────────
   const handlePushSubscribe = async () => {
     if (pushStatus === 'loading' || pushStatus === 'success') return
-    if (isIOS() && !window.matchMedia('(display-mode: standalone)').matches) { setIosPrompt(true); return }
-    if (!isPushSupported()) return
-    if (Notification.permission === 'denied') { setPushStatus('denied'); return }
+
+    // iOS fora do modo standalone → instrução para instalar o app
+    if (isIOS() && !window.matchMedia('(display-mode: standalone)').matches) {
+      setIosPrompt(true)
+      return
+    }
+
+    // Navegador sem suporte — mostra mensagem clara
+    if (!isPushSupported()) {
+      setPushErrorMsg('Este navegador não suporta notificações push. Use o Chrome ou Edge no Android.')
+      setPushStatus('error')
+      return
+    }
+
+    // Permissão já negada pelo usuário nas configurações do browser
+    if (Notification.permission === 'denied') {
+      setPushStatus('denied')
+      return
+    }
+
     setPushStatus('loading')
+    setPushErrorMsg('')
+
     try {
-      const ok = await subscribeToPush()
-      if (ok) {
+      const result: PushSubscribeResult = await subscribeToPush()
+
+      if (result.ok) {
         setPushStatus('success')
+        // Notificação local de boas-vindas
         const reg = await navigator.serviceWorker.ready
         reg.showNotification('Devocionais ativadas! 🙏', {
           body: 'Você receberá avisos quando uma nova devocional estiver disponível.',
@@ -71,11 +113,35 @@ export default function HomePage() {
           tag: 'ibc-welcome',
         })
       } else {
-        setPushStatus(Notification.permission === 'denied' ? 'denied' : 'error')
+        // Traduz a causa do erro em mensagem amigável
+        switch (result.reason) {
+          case 'permission_denied':
+            setPushStatus('denied')
+            break
+          case 'not_supported':
+            setPushErrorMsg('Este navegador não suporta notificações push. Use o Chrome ou Edge.')
+            setPushStatus('error')
+            break
+          case 'vapid_missing':
+            setPushErrorMsg('Configuração do servidor incompleta. Contate o administrador do app.')
+            setPushStatus('error')
+            break
+          case 'sw_not_ready':
+            setPushErrorMsg('Não foi possível registrar o serviço em segundo plano. Recarregue o app e tente novamente.')
+            setPushStatus('error')
+            break
+          default:
+            setPushErrorMsg('Não foi possível ativar. Verifique sua conexão e tente novamente.')
+            setPushStatus('error')
+        }
       }
-    } catch { setPushStatus('error') }
+    } catch {
+      setPushErrorMsg('Erro inesperado. Verifique sua conexão e tente novamente.')
+      setPushStatus('error')
+    }
   }
 
+  // ── Instalar PWA ───────────────────────────────────────────────────────────
   const handleInstallApp = async () => {
     if (!deferredPrompt) return
     await deferredPrompt.prompt()
@@ -86,8 +152,11 @@ export default function HomePage() {
 
   const today = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })
 
+  // ── Card de notificações (estado dinâmico) ─────────────────────────────────
   const renderPushCard = () => {
     if (!isPushSupported() && !isIOS()) return null
+
+    // iOS fora do app instalado
     if (iosPrompt) {
       return (
         <Card className="bg-primary-50 border border-primary-200" padding="md">
@@ -96,10 +165,14 @@ export default function HomePage() {
             Toque em <strong>Compartilhar</strong> no Safari e depois em{' '}
             <strong>"Adicionar à Tela de Início"</strong> para ativar notificações no iPhone.
           </p>
-          <button onClick={() => setIosPrompt(false)} className="text-xs text-primary-400 mt-2">Fechar</button>
+          <button onClick={() => setIosPrompt(false)} className="text-xs text-primary-400 mt-2">
+            Fechar
+          </button>
         </Card>
       )
     }
+
+    // Ativado com sucesso
     if (pushStatus === 'success') {
       return (
         <Card className="bg-gradient-to-r from-green-600 to-green-500 text-white" padding="md">
@@ -107,48 +180,77 @@ export default function HomePage() {
             <CheckCircle size={22} className="flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm">Notificações ativadas ✓</p>
-              <p className="text-xs text-white/80">Você será avisado quando houver nova devocional</p>
+              <p className="text-xs text-white/80">
+                Você será avisado quando houver nova devocional
+              </p>
             </div>
           </div>
         </Card>
       )
     }
+
+    // Usuário bloqueou as notificações nas configurações do browser
     if (pushStatus === 'denied') {
       return (
         <Card className="bg-amber-50 border border-amber-200" padding="md">
-          <div className="flex items-center gap-3">
-            <BellOff size={20} className="text-amber-500 flex-shrink-0" />
+          <div className="flex items-start gap-3">
+            <BellOff size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-amber-800 text-sm">Notificações bloqueadas</p>
-              <p className="text-xs text-amber-600">Para receber devocionais, ative nas configurações do navegador</p>
+              <p className="font-semibold text-amber-800 text-sm">Notificações bloqueadas pelo navegador</p>
+              <p className="text-xs text-amber-600 mt-0.5">
+                Para ativar: acesse as <strong>Configurações do Chrome</strong> →
+                Privacidade e segurança → Notificações → localize este site e clique em <strong>Permitir</strong>.
+              </p>
             </div>
           </div>
         </Card>
       )
     }
+
+    // Erro ao ativar — mostrar mensagem específica + opção de tentar novamente
     if (pushStatus === 'error') {
       return (
         <Card className="bg-red-50 border border-red-200" padding="md">
-          <div className="flex items-center gap-3">
-            <Bell size={20} className="text-red-400 flex-shrink-0" />
+          <div className="flex items-start gap-3">
+            <Bell size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-red-700 text-sm">Não foi possível ativar</p>
-              <p className="text-xs text-red-500">Verifique as permissões e tente novamente</p>
+              <p className="text-xs text-red-500 mt-0.5">
+                {pushErrorMsg || 'Verifique as permissões e tente novamente'}
+              </p>
             </div>
-            <Button size="sm" variant="secondary" onClick={handlePushSubscribe}>Tentar</Button>
+            <Button size="sm" variant="secondary" onClick={handlePushSubscribe} className="flex-shrink-0">
+              Tentar
+            </Button>
           </div>
         </Card>
       )
     }
+
+    // Estado padrão: idle ou loading — card verde com botão Ativar
     return (
-      <Card className="bg-gradient-to-r from-mint-600 to-mint-500 text-white cursor-pointer active:opacity-90" padding="md" onClick={handlePushSubscribe}>
+      <Card
+        className="bg-gradient-to-r from-mint-600 to-mint-500 text-white cursor-pointer active:opacity-90"
+        padding="md"
+        onClick={handlePushSubscribe}
+      >
         <div className="flex items-center gap-3">
           <Bell size={22} className="flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm">Receber devocionais</p>
-            <p className="text-xs text-white/80">{pushStatus === 'loading' ? 'Aguardando permissão...' : 'Ative as notificações para ser avisado todo dia'}</p>
+            <p className="text-xs text-white/80">
+              {pushStatus === 'loading'
+                ? 'Aguardando permissão...'
+                : 'Ative as notificações para ser avisado todo dia'}
+            </p>
           </div>
-          <Button size="sm" variant="gold" loading={pushStatus === 'loading'} disabled={pushStatus === 'loading'} onClick={e => { e.stopPropagation(); handlePushSubscribe() }}>
+          <Button
+            size="sm"
+            variant="gold"
+            loading={pushStatus === 'loading'}
+            disabled={pushStatus === 'loading'}
+            onClick={e => { e.stopPropagation(); handlePushSubscribe() }}
+          >
             {pushStatus === 'loading' ? '' : 'Ativar'}
           </Button>
         </div>
@@ -158,12 +260,16 @@ export default function HomePage() {
 
   return (
     <div className="pb-4">
+      {/* Header */}
       <div className="bg-gradient-to-br from-primary-900 to-primary-700 px-5 pt-12 pb-8">
         <p className="text-primary-200 text-sm mb-1 capitalize">{today}</p>
         <h1 className="text-white text-2xl font-bold mb-1">Graça e paz! 🙏</h1>
         <p className="text-primary-300 text-sm">Igreja Batista Canaã - IBC</p>
       </div>
+
       <div className="px-4 -mt-4 space-y-4">
+
+        {/* Instalar PWA (Android / Chrome) */}
         {deferredPrompt && !appInstalled && (
           <Card className="bg-gradient-to-r from-primary-700 to-primary-600 text-white" padding="md">
             <div className="flex items-center gap-3">
@@ -172,11 +278,17 @@ export default function HomePage() {
                 <p className="font-semibold text-sm">Instalar o app</p>
                 <p className="text-xs text-white/80">Adicione à tela inicial para acesso rápido</p>
               </div>
-              <Button size="sm" variant="gold" onClick={handleInstallApp}>Instalar</Button>
+              <Button size="sm" variant="gold" onClick={handleInstallApp}>
+                Instalar
+              </Button>
             </div>
           </Card>
         )}
+
+        {/* Notificações push */}
         {renderPushCard()}
+
+        {/* Devocional do dia */}
         {todayDevotional ? (
           <Card padding="none" className="overflow-hidden">
             <div className="bg-gradient-to-br from-primary-800 to-primary-900 p-4">
@@ -184,23 +296,44 @@ export default function HomePage() {
               <h2 className="text-white font-bold text-lg leading-snug">{todayDevotional.title}</h2>
               <p className="text-gold-400 text-sm mt-1">{todayDevotional.bible_reference}</p>
             </div>
+
             <div className="p-4 space-y-3">
               {todayDevotional.mixed_audio_url || todayDevotional.original_audio_url ? (
-                <AudioPlayer src={(todayDevotional.mixed_audio_url ?? todayDevotional.original_audio_url)!} title={todayDevotional.title} />
+                <AudioPlayer
+                  src={(todayDevotional.mixed_audio_url ?? todayDevotional.original_audio_url)!}
+                  title={todayDevotional.title}
+                />
               ) : (
-                <Button variant="primary" size="lg" fullWidth icon={<Play size={18} />} onClick={() => navigate(`/app/devocional/${todayDevotional.id}`)}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  icon={<Play size={18} />}
+                  onClick={() => navigate(`/app/devocional/${todayDevotional.id}`)}
+                >
                   Ouvir devocional
                 </Button>
               )}
-              <Button variant="secondary" size="lg" fullWidth icon={<BookOpen size={18} />} onClick={() => navigate(`/app/devocional/${todayDevotional.id}`)}>
+
+              <Button
+                variant="secondary"
+                size="lg"
+                fullWidth
+                icon={<BookOpen size={18} />}
+                onClick={() => navigate(`/app/devocional/${todayDevotional.id}`)}
+              >
                 Ler devocional
               </Button>
+
+              {/* Reações */}
               <div className="flex gap-3 pt-1">
                 <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                  <span>🙏</span><span>{todayDevotional.reactions_count?.amen ?? 0} Amém</span>
+                  <span>🙏</span>
+                  <span>{todayDevotional.reactions_count?.amen ?? 0} Amém</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                  <span>✨</span><span>{todayDevotional.reactions_count?.edified ?? 0} Edificados</span>
+                  <span>✨</span>
+                  <span>{todayDevotional.reactions_count?.edified ?? 0} Edificados</span>
                 </div>
               </div>
             </div>
@@ -212,11 +345,17 @@ export default function HomePage() {
             <p className="text-gray-400 text-sm mt-1">Volte mais tarde</p>
           </Card>
         )}
+
+        {/* Avisos */}
         {announcements.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2 px-1">
-              <h3 className="font-semibold text-gray-800 flex items-center gap-2"><Megaphone size={16} className="text-primary-700" /> Avisos</h3>
-              <button onClick={() => navigate('/app/avisos')} className="text-primary-700 text-sm flex items-center gap-0.5">Ver todos <ChevronRight size={14} /></button>
+              <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                <Megaphone size={16} className="text-primary-700" /> Avisos
+              </h3>
+              <button onClick={() => navigate('/app/avisos')} className="text-primary-700 text-sm flex items-center gap-0.5">
+                Ver todos <ChevronRight size={14} />
+              </button>
             </div>
             <div className="space-y-2">
               {announcements.map(a => (
@@ -228,15 +367,26 @@ export default function HomePage() {
             </div>
           </div>
         )}
+
+        {/* Devocionais anteriores */}
         {recent.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2 px-1">
-              <h3 className="font-semibold text-gray-800 flex items-center gap-2"><BookOpen size={16} className="text-primary-700" /> Devocionais anteriores</h3>
-              <button onClick={() => navigate('/app/devocionais')} className="text-primary-700 text-sm flex items-center gap-0.5">Ver todos <ChevronRight size={14} /></button>
+              <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                <BookOpen size={16} className="text-primary-700" /> Devocionais anteriores
+              </h3>
+              <button onClick={() => navigate('/app/devocionais')} className="text-primary-700 text-sm flex items-center gap-0.5">
+                Ver todos <ChevronRight size={14} />
+              </button>
             </div>
             <div className="space-y-2">
               {recent.map(d => (
-                <Card key={d.id} padding="sm" className="flex items-center gap-3 cursor-pointer active:bg-gray-50" onClick={() => navigate(`/app/devocional/${d.id}`)}>
+                <Card
+                  key={d.id}
+                  padding="sm"
+                  className="flex items-center gap-3 cursor-pointer active:bg-gray-50"
+                  onClick={() => navigate(`/app/devocional/${d.id}`)}
+                >
                   <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
                     <BookOpen size={16} className="text-primary-700" />
                   </div>
@@ -250,6 +400,8 @@ export default function HomePage() {
             </div>
           </div>
         )}
+
+        {/* Pedidos de oração */}
         <Card padding="md" className="cursor-pointer" onClick={() => navigate('/app/oracao')}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">

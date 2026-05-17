@@ -164,9 +164,23 @@ export const pushApi = {
 // --- Storage -----------------------------------------------------------------
 export const storageApi = {
   uploadAudio: async (file: Blob, path: string) => {
+    // Determina o Content-Type correto pelo nome do arquivo (evita bug iOS com audio/webm)
+    const _ext = path.split('.').pop()?.toLowerCase() ?? ''
+    const _mimeByExt: Record<string, string> = {
+      webm: 'audio/webm',
+      wav:  'audio/wav',
+      mp3:  'audio/mpeg',
+      m4a:  'audio/mp4',
+      aac:  'audio/aac',
+      ogg:  'audio/ogg',
+    }
+    const contentType =
+      (_ext && _mimeByExt[_ext]) ||
+      (file.type && file.type !== 'application/octet-stream' ? file.type : 'audio/webm')
+
     const { data, error } = await supabase.storage
       .from('devotional-audio')
-      .upload(path, file, { contentType: 'audio/webm', upsert: true })
+      .upload(path, file, { contentType, upsert: true })
     if (error) throw error
     const { data: urlData } = supabase.storage.from('devotional-audio').getPublicUrl(data.path)
     return urlData.publicUrl
@@ -229,13 +243,11 @@ export const financialReportsApi = {
     supabase.from('financial_reports').insert(data).select().single(),
 
   update: (id: string, data: Record<string, unknown>) =>
-    supabase.from('financial_reports').update(data).eq('id', id).select().single(),
+    supabase.from('financial_reports').update(data).eq('id', id),
 
   delete: (id: string) =>
     supabase.from('financial_reports').delete().eq('id', id),
-}
 
-// --- Dashboard Stats ---------------------------------------------------------
-export const dashboardApi = {
-  getStats: () => supabase.rpc('get_dashboard_stats'),
+  updateStatus: (id: string, status: string) =>
+    supabase.from('financial_reports').update({ status }).eq('id', id),
 }

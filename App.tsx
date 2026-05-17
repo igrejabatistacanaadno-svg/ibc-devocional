@@ -9,6 +9,7 @@ import DevotionalsListPage  from '@/pages/public/DevotionalsListPage'
 import PrayerPage           from '@/pages/public/PrayerPage'
 import AnnouncementsPage    from '@/pages/public/AnnouncementsPage'
 import MorePage             from '@/pages/public/MorePage'
+import TesourariaPage       from '@/pages/public/TesourariaPage'
 
 // Admin pages
 import AdminLoginPage        from '@/pages/admin/AdminLoginPage'
@@ -54,6 +55,7 @@ function AppRoutes() {
         <Route path="oracao"              element={<PrayerPage />} />
         <Route path="avisos"              element={<AnnouncementsPage />} />
         <Route path="mais"                element={<MorePage />} />
+        <Route path="tesouraria"          element={<TesourariaPage />} />
       </Route>
 
       {/* Admin area */}
@@ -65,6 +67,7 @@ function AppRoutes() {
         <Route path="comentarios"       element={<AdminCommentsPage />} />
         <Route path="oracao"            element={<AdminPrayerPage />} />
         <Route path="avisos"            element={<AdminAnnouncementsPage />} />
+        <Route path="tesouraria"        element={<AdminFinancialReportsPage />} />
         {/* Stubs for future pages */}
         <Route path="musicas"           element={<div className="p-6 text-gray-500">Biblioteca musical - em breve</div>} />
         <Route path="notificacoes"      element={<div className="p-6 text-gray-500">Notificações - em breve</div>} />

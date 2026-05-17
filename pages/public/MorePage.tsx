@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { User, Bell, Smartphone, LogOut, ChevronRight, Trash2 } from 'lucide-react'
+import { User, Bell, Smartphone, LogOut, ChevronRight, Trash2, Landmark } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { unsubscribeFromPush } from '@/lib/pushNotifications'
 import Card from '@/components/ui/Card'
@@ -25,6 +25,17 @@ export default function MorePage() {
   }
 
   const menuItems = [
+    {
+      section: 'Igreja',
+      items: [
+        {
+          icon: Landmark,
+          label: 'Tesouraria',
+          sub: 'Relatórios financeiros da igreja',
+          action: () => navigate('/app/tesouraria'),
+        },
+      ],
+    },
     {
       section: 'Perfil',
       items: [

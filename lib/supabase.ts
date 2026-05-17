@@ -190,8 +190,49 @@ export const storageApi = {
     return urlData.publicUrl
   },
 
+  uploadPdf: async (file: File, path: string) => {
+    const { data, error } = await supabase.storage
+      .from('financial-reports')
+      .upload(path, file, { contentType: 'application/pdf', upsert: true })
+    if (error) throw error
+    const { data: urlData } = supabase.storage.from('financial-reports').getPublicUrl(data.path)
+    return urlData.publicUrl
+  },
+
+  deletePdf: async (path: string) => {
+    const { error } = await supabase.storage.from('financial-reports').remove([path])
+    if (error) throw error
+  },
+
   getMusicLibrary: () =>
     supabase.from('background_music').select('*').order('created_at', { ascending: false }),
+}
+
+// --- Financial Reports -------------------------------------------------------
+export const financialReportsApi = {
+  getPublished: () =>
+    supabase
+      .from('financial_reports')
+      .select('*')
+      .eq('status', 'published')
+      .order('reference_year', { ascending: false })
+      .order('reference_month', { ascending: false }),
+
+  getAll: () =>
+    supabase
+      .from('financial_reports')
+      .select('*')
+      .order('reference_year', { ascending: false })
+      .order('reference_month', { ascending: false }),
+
+  create: (data: Record<string, unknown>) =>
+    supabase.from('financial_reports').insert(data).select().single(),
+
+  update: (id: string, data: Record<string, unknown>) =>
+    supabase.from('financial_reports').update(data).eq('id', id).select().single(),
+
+  delete: (id: string) =>
+    supabase.from('financial_reports').delete().eq('id', id),
 }
 
 // --- Dashboard Stats ---------------------------------------------------------

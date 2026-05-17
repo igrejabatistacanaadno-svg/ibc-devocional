@@ -131,3 +131,18 @@ export interface DashboardStats {
   pushSubscribers: number
   lastNotificationSent: string | null
 }
+
+// --- Financial Reports -------------------------------------------------------
+export type FinancialReportStatus = 'draft' | 'published'
+
+export interface FinancialReport {
+  id: string
+  title: string
+  description: string | null
+  reference_month: number
+  reference_year: number
+  pdf_url: string
+  status: FinancialReportStatus
+  created_at: string
+  updated_at: string
+}

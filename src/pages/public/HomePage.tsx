@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Play, BookOpen, Bell, ChevronRight, Megaphone, Heart } from 'lucide-react'
+import { Play, BookOpen, Bell, ChevronRight, Megaphone, Heart, Download, CheckCircle, BellOff } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { devotionalsApi, announcementsApi } from '@/lib/supabase'
@@ -11,14 +11,24 @@ import AudioPlayer from '@/components/devotional/AudioPlayer'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 
+// Tipagem do evento de instalação PWA (não existe no lib padrão do TS)
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
 const useMock = !import.meta.env.VITE_SUPABASE_URL
+
+type PushStatus = 'idle' | 'loading' | 'success' | 'denied' | 'error'
 
 export default function HomePage() {
   const [todayDevotional, setTodayDevotional] = useState<Devotional | null>(null)
   const [recent, setRecent] = useState<Devotional[]>([])
   const [announcements, setAnnouncements] = useState<Announcement[]>([])
-  const [pushSubscribed, setPushSubscribed] = useState(false)
+  const [pushStatus, setPushStatus] = useState<PushStatus>('idle')
   const [iosPrompt, setIosPrompt] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [appInstalled, setAppInstalled] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -31,56 +41,142 @@ export default function HomePage() {
       devotionalsApi.getPublished().then(({ data }) => data && setRecent(data.slice(1, 4)))
       announcementsApi.getActive().then(({ data }) => data && setAnnouncements(data.slice(0, 3)))
     }
-    isPushSubscribed().then(setPushSubscribed)
+    isPushSubscribed().then(subscribed => { if (subscribed) setPushStatus('success') })
+    const handleBeforeInstall = (e: Event) => { e.preventDefault(); setDeferredPrompt(e as BeforeInstallPromptEvent) }
+    const handleAppInstalled = () => { setAppInstalled(true); setDeferredPrompt(null) }
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall)
+    window.addEventListener('appinstalled', handleAppInstalled)
+    if (window.matchMedia('(display-mode: standalone)').matches) setAppInstalled(true)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
   }, [])
 
   const handlePushSubscribe = async () => {
-    if (isIOS() && !('standalone' in navigator && (navigator as unknown as Record<string, unknown>).standalone)) {
-      setIosPrompt(true)
-      return
-    }
-    const ok = await subscribeToPush()
-    if (ok) setPushSubscribed(true)
+    if (pushStatus === 'loading' || pushStatus === 'success') return
+    if (isIOS() && !window.matchMedia('(display-mode: standalone)').matches) { setIosPrompt(true); return }
+    if (!isPushSupported()) return
+    if (Notification.permission === 'denied') { setPushStatus('denied'); return }
+    setPushStatus('loading')
+    try {
+      const ok = await subscribeToPush()
+      if (ok) {
+        setPushStatus('success')
+        const reg = await navigator.serviceWorker.ready
+        reg.showNotification('Devocionais ativadas! 🙏', {
+          body: 'Você receberá avisos quando uma nova devocional estiver disponível.',
+          icon: '/icons/icon-192.png',
+          badge: '/icons/icon-192.png',
+          tag: 'ibc-welcome',
+        })
+      } else {
+        setPushStatus(Notification.permission === 'denied' ? 'denied' : 'error')
+      }
+    } catch { setPushStatus('error') }
+  }
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return
+    await deferredPrompt.prompt()
+    const { outcome } = await deferredPrompt.userChoice
+    if (outcome === 'accepted') setAppInstalled(true)
+    setDeferredPrompt(null)
   }
 
   const today = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })
 
+  const renderPushCard = () => {
+    if (!isPushSupported() && !isIOS()) return null
+    if (iosPrompt) {
+      return (
+        <Card className="bg-primary-50 border border-primary-200" padding="md">
+          <p className="font-semibold text-primary-800 text-sm mb-1">Instale o app no iPhone</p>
+          <p className="text-xs text-primary-600">
+            Toque em <strong>Compartilhar</strong> no Safari e depois em{' '}
+            <strong>"Adicionar à Tela de Início"</strong> para ativar notificações no iPhone.
+          </p>
+          <button onClick={() => setIosPrompt(false)} className="text-xs text-primary-400 mt-2">Fechar</button>
+        </Card>
+      )
+    }
+    if (pushStatus === 'success') {
+      return (
+        <Card className="bg-gradient-to-r from-green-600 to-green-500 text-white" padding="md">
+          <div className="flex items-center gap-3">
+            <CheckCircle size={22} className="flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">Notificações ativadas ✓</p>
+              <p className="text-xs text-white/80">Você será avisado quando houver nova devocional</p>
+            </div>
+          </div>
+        </Card>
+      )
+    }
+    if (pushStatus === 'denied') {
+      return (
+        <Card className="bg-amber-50 border border-amber-200" padding="md">
+          <div className="flex items-center gap-3">
+            <BellOff size={20} className="text-amber-500 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-amber-800 text-sm">Notificações bloqueadas</p>
+              <p className="text-xs text-amber-600">Para receber devocionais, ative nas configurações do navegador</p>
+            </div>
+          </div>
+        </Card>
+      )
+    }
+    if (pushStatus === 'error') {
+      return (
+        <Card className="bg-red-50 border border-red-200" padding="md">
+          <div className="flex items-center gap-3">
+            <Bell size={20} className="text-red-400 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-red-700 text-sm">Não foi possível ativar</p>
+              <p className="text-xs text-red-500">Verifique as permissões e tente novamente</p>
+            </div>
+            <Button size="sm" variant="secondary" onClick={handlePushSubscribe}>Tentar</Button>
+          </div>
+        </Card>
+      )
+    }
+    return (
+      <Card className="bg-gradient-to-r from-mint-600 to-mint-500 text-white cursor-pointer active:opacity-90" padding="md" onClick={handlePushSubscribe}>
+        <div className="flex items-center gap-3">
+          <Bell size={22} className="flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm">Receber devocionais</p>
+            <p className="text-xs text-white/80">{pushStatus === 'loading' ? 'Aguardando permissão...' : 'Ative as notificações para ser avisado todo dia'}</p>
+          </div>
+          <Button size="sm" variant="gold" loading={pushStatus === 'loading'} disabled={pushStatus === 'loading'} onClick={e => { e.stopPropagation(); handlePushSubscribe() }}>
+            {pushStatus === 'loading' ? '' : 'Ativar'}
+          </Button>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <div className="pb-4">
-      {/* Header */}
       <div className="bg-gradient-to-br from-primary-900 to-primary-700 px-5 pt-12 pb-8">
         <p className="text-primary-200 text-sm mb-1 capitalize">{today}</p>
         <h1 className="text-white text-2xl font-bold mb-1">Graça e paz! 🙏</h1>
-        <p className="text-primary-300 text-sm">Igreja Batista Canaã — IBC</p>
+        <p className="text-primary-300 text-sm">Igreja Batista Canaã - IBC</p>
       </div>
-
       <div className="px-4 -mt-4 space-y-4">
-        {/* Push notification prompt */}
-        {isPushSupported() && !pushSubscribed && !iosPrompt && (
-          <Card className="bg-gradient-to-r from-mint-600 to-mint-500 text-white" padding="md">
+        {deferredPrompt && !appInstalled && (
+          <Card className="bg-gradient-to-r from-primary-700 to-primary-600 text-white" padding="md">
             <div className="flex items-center gap-3">
-              <Bell size={22} className="flex-shrink-0" />
+              <Download size={22} className="flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm">Receber devocionais</p>
-                <p className="text-xs text-white/80">Ative as notificações para ser avisado todo dia</p>
+                <p className="font-semibold text-sm">Instalar o app</p>
+                <p className="text-xs text-white/80">Adicione à tela inicial para acesso rápido</p>
               </div>
-              <Button size="sm" variant="gold" onClick={handlePushSubscribe}>Ativar</Button>
+              <Button size="sm" variant="gold" onClick={handleInstallApp}>Instalar</Button>
             </div>
           </Card>
         )}
-
-        {/* iOS PWA prompt */}
-        {iosPrompt && (
-          <Card className="bg-primary-50 border border-primary-200" padding="md">
-            <p className="font-semibold text-primary-800 text-sm mb-1">Instale o app no iPhone</p>
-            <p className="text-xs text-primary-600">
-              Toque em <strong>Compartilhar</strong> no Safari e depois em <strong>"Adicionar à Tela de Início"</strong> para ativar notificações no iPhone.
-            </p>
-            <button onClick={() => setIosPrompt(false)} className="text-xs text-primary-400 mt-2">Fechar</button>
-          </Card>
-        )}
-
-        {/* Devocional do dia */}
+        {renderPushCard()}
         {todayDevotional ? (
           <Card padding="none" className="overflow-hidden">
             <div className="bg-gradient-to-br from-primary-800 to-primary-900 p-4">
@@ -88,44 +184,23 @@ export default function HomePage() {
               <h2 className="text-white font-bold text-lg leading-snug">{todayDevotional.title}</h2>
               <p className="text-gold-400 text-sm mt-1">{todayDevotional.bible_reference}</p>
             </div>
-
             <div className="p-4 space-y-3">
               {todayDevotional.mixed_audio_url || todayDevotional.original_audio_url ? (
-                <AudioPlayer
-                  src={(todayDevotional.mixed_audio_url ?? todayDevotional.original_audio_url)!}
-                  title={todayDevotional.title}
-                />
+                <AudioPlayer src={(todayDevotional.mixed_audio_url ?? todayDevotional.original_audio_url)!} title={todayDevotional.title} />
               ) : (
-                <Button
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  icon={<Play size={18} />}
-                  onClick={() => navigate(`/app/devocional/${todayDevotional.id}`)}
-                >
+                <Button variant="primary" size="lg" fullWidth icon={<Play size={18} />} onClick={() => navigate(`/app/devocional/${todayDevotional.id}`)}>
                   Ouvir devocional
                 </Button>
               )}
-
-              <Button
-                variant="secondary"
-                size="lg"
-                fullWidth
-                icon={<BookOpen size={18} />}
-                onClick={() => navigate(`/app/devocional/${todayDevotional.id}`)}
-              >
+              <Button variant="secondary" size="lg" fullWidth icon={<BookOpen size={18} />} onClick={() => navigate(`/app/devocional/${todayDevotional.id}`)}>
                 Ler devocional
               </Button>
-
-              {/* Reações */}
               <div className="flex gap-3 pt-1">
                 <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                  <span>🙏</span>
-                  <span>{todayDevotional.reactions_count?.amen ?? 0} Amém</span>
+                  <span>🙏</span><span>{todayDevotional.reactions_count?.amen ?? 0} Amém</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                  <span>✨</span>
-                  <span>{todayDevotional.reactions_count?.edified ?? 0} Edificados</span>
+                  <span>✨</span><span>{todayDevotional.reactions_count?.edified ?? 0} Edificados</span>
                 </div>
               </div>
             </div>
@@ -137,17 +212,11 @@ export default function HomePage() {
             <p className="text-gray-400 text-sm mt-1">Volte mais tarde</p>
           </Card>
         )}
-
-        {/* Avisos */}
         {announcements.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2 px-1">
-              <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                <Megaphone size={16} className="text-primary-700" /> Avisos
-              </h3>
-              <button onClick={() => navigate('/app/avisos')} className="text-primary-700 text-sm flex items-center gap-0.5">
-                Ver todos <ChevronRight size={14} />
-              </button>
+              <h3 className="font-semibold text-gray-800 flex items-center gap-2"><Megaphone size={16} className="text-primary-700" /> Avisos</h3>
+              <button onClick={() => navigate('/app/avisos')} className="text-primary-700 text-sm flex items-center gap-0.5">Ver todos <ChevronRight size={14} /></button>
             </div>
             <div className="space-y-2">
               {announcements.map(a => (
@@ -159,32 +228,21 @@ export default function HomePage() {
             </div>
           </div>
         )}
-
-        {/* Devocionais anteriores */}
         {recent.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2 px-1">
-              <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                <BookOpen size={16} className="text-primary-700" /> Devocionais anteriores
-              </h3>
-              <button onClick={() => navigate('/app/devocionais')} className="text-primary-700 text-sm flex items-center gap-0.5">
-                Ver todos <ChevronRight size={14} />
-              </button>
+              <h3 className="font-semibold text-gray-800 flex items-center gap-2"><BookOpen size={16} className="text-primary-700" /> Devocionais anteriores</h3>
+              <button onClick={() => navigate('/app/devocionais')} className="text-primary-700 text-sm flex items-center gap-0.5">Ver todos <ChevronRight size={14} /></button>
             </div>
             <div className="space-y-2">
               {recent.map(d => (
-                <Card
-                  key={d.id}
-                  padding="sm"
-                  className="flex items-center gap-3 cursor-pointer active:bg-gray-50"
-                  onClick={() => navigate(`/app/devocional/${d.id}`)}
-                >
+                <Card key={d.id} padding="sm" className="flex items-center gap-3 cursor-pointer active:bg-gray-50" onClick={() => navigate(`/app/devocional/${d.id}`)}>
                   <div className="w-10 h-10 rounded-xl bg-primary-100 flex items-center justify-center flex-shrink-0">
                     <BookOpen size={16} className="text-primary-700" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-800 text-sm truncate">{d.title}</p>
-                    <p className="text-gray-400 text-xs mt-0.5">{d.bible_reference} • {format(new Date(d.publish_date), 'dd/MM', { locale: ptBR })}</p>
+                    <p className="text-gray-400 text-xs mt-0.5">{d.bible_reference} · {format(new Date(d.publish_date), 'dd/MM', { locale: ptBR })}</p>
                   </div>
                   <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
                 </Card>
@@ -192,8 +250,6 @@ export default function HomePage() {
             </div>
           </div>
         )}
-
-        {/* Pedidos de oração */}
         <Card padding="md" className="cursor-pointer" onClick={() => navigate('/app/oracao')}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">

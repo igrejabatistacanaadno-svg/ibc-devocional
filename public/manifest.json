@@ -36,17 +36,13 @@
       "purpose": "any"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/icons/screenshot-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Tela inicial do app"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Devocional de hoje",
       "short_name": "Hoje",
-      "description":
+      "description": "Abrir a devocional do dia",
+      "url": "/app",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

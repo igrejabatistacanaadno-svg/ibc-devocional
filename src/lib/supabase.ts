@@ -251,3 +251,9 @@ export const financialReportsApi = {
   updateStatus: (id: string, status: string) =>
     supabase.from('financial_reports').update({ status }).eq('id', id),
 }
+
+
+// --- Dashboard Stats ---------------------------------------------------------
+export const dashboardApi = {
+  getStats: () => supabase.rpc('get_dashboard_stats'),
+}

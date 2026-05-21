@@ -33,22 +33,22 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { id: 'inicio',       label: 'InÃ­cio',         icon: Home },
+  { id: 'inicio',       label: 'Início',         icon: Home },
   { id: 'pdfs',         label: 'PDFs/Cursos',    icon: FileText,    postType: 'pdf_curso' },
   { id: 'comunicados',  label: 'Comunicados',    icon: Megaphone,   postType: 'comunicado' },
   { id: 'avisos',       label: 'Avisos',         icon: Bell,        postType: 'aviso' },
-  { id: 'pregacao',     label: 'PregaÃ§Ã£o',       icon: Mic2,        postType: 'pregacao' },
-  { id: 'interacoes',   label: 'InteraÃ§Ãµes',     icon: MessageCircle, postType: 'interacao' },
+  { id: 'pregacao',     label: 'Pregação',       icon: Mic2,        postType: 'pregacao' },
+  { id: 'interacoes',   label: 'Interações',     icon: MessageCircle, postType: 'interacao' },
 ]
 
 const CELULA_THEMES: Record<string, { gradient: string; emoji: string }> = {
   'homens-posicionados': {
     gradient: 'linear-gradient(135deg, #0d2654 0%, #1a3f7a 100%)',
-    emoji: 'ð¡ï¸',
+    emoji: '🛡️',
   },
   'mulheres-de-excelencia': {
     gradient: 'linear-gradient(135deg, #4a1456 0%, #7b2d8b 100%)',
-    emoji: 'â¨',
+    emoji: '✨',
   },
 }
 
@@ -66,11 +66,11 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
   const [loadingComments, setLoadingComments] = useState(false)
 
   useEffect(() => {
-    // Verificar se usuÃ¡rio jÃ¡ leu
+    // Verificar se usuário já leu
     celulaInteracoesApi.userRead(post.id, deviceId).then(({ data }) => {
       if (data) setRead(true)
     })
-    // Contagem de presenÃ§as
+    // Contagem de presenças
     celulaInteracoesApi.getPresences(post.id).then(({ data }) => {
       if (data) {
         setPresenceCount(data.length)
@@ -86,7 +86,7 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
 
   const handlePresence = async () => {
     if (userPresent) return
-    const name = authorName || prompt('Seu nome para confirmaÃ§Ã£o de presenÃ§a:') || 'AnÃ´nimo'
+    const name = authorName || prompt('Seu nome para confirmação de presença:') || 'Anônimo'
     setAuthorName(name)
     localStorage.setItem('ibc_comment_name', name)
     await celulaInteracoesApi.confirmPresence(post.id, deviceId, name)
@@ -107,7 +107,7 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
 
   const handleSendComment = async () => {
     if (!commentText.trim()) return
-    const name = authorName.trim() || 'AnÃ´nimo'
+    const name = authorName.trim() || 'Anônimo'
     setSending(true)
     const { data } = await celulaInteracoesApi.addComment({
       post_id: post.id,
@@ -144,7 +144,7 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
         </div>
       </div>
 
-      {/* ConteÃºdo */}
+      {/* Conteúdo */}
       {post.content && (
         <div className="px-4 pb-3">
           <p className={`text-gray-600 text-sm leading-relaxed whitespace-pre-wrap ${!expanded && isLong ? 'line-clamp-3' : ''}`}>
@@ -177,7 +177,7 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
         </div>
       )}
 
-      {/* VÃ­deo link */}
+      {/* Vídeo link */}
       {post.video_url && (
         <div className="px-4 pb-3">
           <a
@@ -187,20 +187,20 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
             className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl px-4 py-2.5 text-sm font-medium hover:bg-blue-100 transition-colors"
           >
             <Mic2 size={16} />
-            Assistir pregaÃ§Ã£o
+            Assistir pregação
             <ExternalLink size={13} />
           </a>
         </div>
       )}
 
-      {/* Ãudio */}
+      {/* Áudio */}
       {post.audio_url && (
         <div className="px-4 pb-3">
           <audio controls className="w-full rounded-xl" src={post.audio_url} />
         </div>
       )}
 
-      {/* AÃ§Ãµes */}
+      {/* Ações */}
       <div className="border-t border-gray-50 px-4 py-2.5 flex items-center gap-3 flex-wrap">
         {/* Confirmar leitura */}
         <button
@@ -213,10 +213,10 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
           }`}
         >
           <CheckCircle size={13} />
-          {read ? 'Lido â' : 'Confirmar leitura'}
+          {read ? 'Lido ✓' : 'Confirmar leitura'}
         </button>
 
-        {/* PresenÃ§a (para interaÃ§Ãµes) */}
+        {/* Presença (para interações) */}
         {post.type === 'interacao' && (
           <button
             onClick={handlePresence}
@@ -228,11 +228,11 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
             }`}
           >
             <Users size={13} />
-            {userPresent ? `Presente â (${presenceCount})` : `Confirmar presenÃ§a (${presenceCount})`}
+            {userPresent ? `Presente ✓ (${presenceCount})` : `Confirmar presença (${presenceCount})`}
           </button>
         )}
 
-        {/* ComentÃ¡rios */}
+        {/* Comentários */}
         <button
           onClick={handleShowComments}
           className="flex items-center gap-1.5 text-xs font-medium rounded-xl px-3 py-1.5 bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-700 transition-colors ml-auto"
@@ -242,7 +242,7 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
         </button>
       </div>
 
-      {/* SeÃ§Ã£o de comentÃ¡rios */}
+      {/* Seção de comentários */}
       {showComments && (
         <div className="border-t border-gray-100 bg-gray-50 px-4 py-3">
           {loadingComments ? (
@@ -258,12 +258,12 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
                     <p className="font-semibold text-gray-700 text-xs">{c.author_name}</p>
                     <p className="text-gray-600 text-xs mt-0.5">{c.comment_text}</p>
                     <p className="text-gray-400 text-[10px] mt-1">
-                      {format(new Date(c.created_at), "d/MM 'Ã s' HH:mm")}
+                      {format(new Date(c.created_at), "d/MM 'às' HH:mm")}
                     </p>
                   </div>
                 ))}
               </div>
-              {/* Input de comentÃ¡rio */}
+              {/* Input de comentário */}
               <div className="space-y-2">
                 {!getSavedName() && (
                   <input
@@ -280,7 +280,7 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
                     value={commentText}
                     onChange={e => setCommentText(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendComment()}
-                    placeholder="Escreva um comentÃ¡rio..."
+                    placeholder="Escreva um comentário..."
                     className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 bg-white"
                   />
                   <button
@@ -304,7 +304,7 @@ function PostCard({ post, deviceId }: { post: CelulaPost; deviceId: string }) {
 function TabContent({ posts, tab, deviceId }: { posts: CelulaPost[]; tab: Tab; deviceId: string }) {
   const filtered = tab.postType
     ? posts.filter(p => p.type === tab.postType)
-    : posts // 'inicio' mostra pinned + Ãºltimos
+    : posts // 'inicio' mostra pinned + últimos
 
   const displayed = tab.id === 'inicio'
     ? [...posts.filter(p => p.pinned), ...posts.filter(p => !p.pinned)].slice(0, 5)
@@ -313,8 +313,8 @@ function TabContent({ posts, tab, deviceId }: { posts: CelulaPost[]; tab: Tab; d
   if (displayed.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-3xl mb-3">ð­</p>
-        <p className="text-gray-500 font-medium text-sm">Nenhum conteÃºdo ainda</p>
+        <p className="text-3xl mb-3">📭</p>
+        <p className="text-gray-500 font-medium text-sm">Nenhum conteúdo ainda</p>
         <p className="text-gray-400 text-xs mt-1">Em breve novidades aqui</p>
       </div>
     )
@@ -340,7 +340,7 @@ export default function CelulaDetailPage() {
   const tabBarRef = useRef<HTMLDivElement>(null)
   const deviceId = getDeviceId()
 
-  const theme = CELULA_THEMES[slug] ?? { gradient: 'linear-gradient(135deg, #0d2654 0%, #1a3f7a 100%)', emoji: 'âª' }
+  const theme = CELULA_THEMES[slug] ?? { gradient: 'linear-gradient(135deg, #0d2654 0%, #1a3f7a 100%)', emoji: '⛪' }
 
   useEffect(() => {
     celulasApi.getBySlug(slug).then(({ data }) => {
@@ -378,7 +378,7 @@ export default function CelulaDetailPage() {
             <ArrowLeft size={18} className="text-white" />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-white/60 text-xs font-medium uppercase tracking-wider">CÃ©lula</p>
+            <p className="text-white/60 text-xs font-medium uppercase tracking-wider">Célula</p>
             <h1 className="text-white font-bold text-xl leading-tight truncate">{celula?.name ?? '...'}</h1>
           </div>
           <div
@@ -422,7 +422,7 @@ export default function CelulaDetailPage() {
         })}
       </div>
 
-      {/* ConteÃºdo da aba */}
+      {/* Conteúdo da aba */}
       <div className="px-4 pt-4">
         {loading ? (
           <div className="space-y-3">

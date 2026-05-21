@@ -11,13 +11,13 @@ const adminNav = [
   { to: '/admin/devocionais',      label: 'Devocionais',       icon: BookOpen         },
   { to: '/admin/nova-devocional',  label: 'Nova devocional',   icon: Mic              },
   { to: '/admin/musicas',          label: 'Biblioteca musical',icon: Music            },
-  { to: '/admin/comentarios',      label: 'ComentÃ¡rios',       icon: MessageSquare    },
-  { to: '/admin/oracao',           label: 'Pedidos de oraÃ§Ã£o', icon: Heart            },
+  { to: '/admin/comentarios',      label: 'Comentários',       icon: MessageSquare    },
+  { to: '/admin/oracao',           label: 'Pedidos de oração', icon: Heart            },
   { to: '/admin/avisos',           label: 'Avisos',            icon: Megaphone        },
   { to: '/admin/tesouraria',       label: 'Tesouraria',        icon: Landmark         },
-  { to: '/admin/celulas',          label: 'CÃ©lulas',           icon: Users            },
-  { to: '/admin/notificacoes',     label: 'NotificaÃ§Ãµes',      icon: Bell             },
-  { to: '/admin/configuracoes',    label: 'ConfiguraÃ§Ãµes',     icon: Settings         },
+  { to: '/admin/celulas',          label: 'Células',           icon: Users            },
+  { to: '/admin/notificacoes',     label: 'Notificações',      icon: Bell             },
+  { to: '/admin/configuracoes',    label: 'Configurações',     icon: Settings         },
 ]
 
 export default function AdminLayout() {
@@ -61,7 +61,7 @@ export default function AdminLayout() {
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-primary-700 text-white'
-                    : 'text-primary-200 hover:bg-primary-800 hover:text-white'
+                    : 'text-primary-200 hover:bw-primary-800 hover:text-white'
                 }`
               }
             >

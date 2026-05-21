@@ -12,7 +12,7 @@ import AudioPlayer from '@/components/devotional/AudioPlayer'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 
-// Tipagem do evento de instalaÃ§Ã£o PWA (nÃ£o existe no lib padrÃ£o do TS)
+// Tipagem do evento de instalação PWA (não existe no lib padrão do TS)
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
@@ -35,9 +35,9 @@ export default function HomePage() {
   const [pixCopied, setPixCopied] = useState(false)
   const navigate = useNavigate()
 
-  // ââ PIX âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── PIX ───────────────────────────────────────────────────────────────────
   const PIX_KEY = '04.206.874/0001-50'
-  const PIX_NAME = 'Igreja Batista CanaÃ£ - IBC'
+  const PIX_NAME = 'Igreja Batista Canaã - IBC'
 
   const handleCopyPix = async () => {
     try {
@@ -70,12 +70,12 @@ export default function HomePage() {
       announcementsApi.getActive().then(({ data }) => data && setAnnouncements(data.slice(0, 3)))
     }
 
-    // Estado inicial das notificaÃ§Ãµes
+    // Estado inicial das notificações
     isPushSubscribed().then(subscribed => {
       if (subscribed) setPushStatus('success')
     })
 
-    // Captura o evento de instalaÃ§Ã£o PWA no Android/Chrome
+    // Captura o evento de instalação PWA no Android/Chrome
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
@@ -87,7 +87,7 @@ export default function HomePage() {
     window.addEventListener('beforeinstallprompt', handleBeforeInstall)
     window.addEventListener('appinstalled', handleAppInstalled)
 
-    // Verifica se jÃ¡ estÃ¡ instalado (modo standalone)
+    // Verifica se já está instalado (modo standalone)
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setAppInstalled(true)
     }
@@ -98,24 +98,24 @@ export default function HomePage() {
     }
   }, [])
 
-  // ââ Ativar notificaÃ§Ãµes push âââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Ativar notificações push ───────────────────────────────────────────────
   const handlePushSubscribe = async () => {
     if (pushStatus === 'loading' || pushStatus === 'success') return
 
-    // iOS fora do modo standalone â instruÃ§Ã£o para instalar o app
+    // iOS fora do modo standalone → instrução para instalar o app
     if (isIOS() && !window.matchMedia('(display-mode: standalone)').matches) {
       setIosPrompt(true)
       return
     }
 
-    // Navegador sem suporte â mostra mensagem clara
+    // Navegador sem suporte — mostra mensagem clara
     if (!isPushSupported()) {
-      setPushErrorMsg('Este navegador nÃ£o suporta notificaÃ§Ãµes push. Use o Chrome ou Edge no Android.')
+      setPushErrorMsg('Este navegador não suporta notificações push. Use o Chrome ou Edge no Android.')
       setPushStatus('error')
       return
     }
 
-    // PermissÃ£o jÃ¡ negada pelo usuÃ¡rio nas configuraÃ§Ãµes do browser
+    // Permissão já negada pelo usuário nas configurações do browser
     if (Notification.permission === 'denied') {
       setPushStatus('denied')
       return
@@ -129,44 +129,44 @@ export default function HomePage() {
 
       if (result.ok) {
         setPushStatus('success')
-        // NotificaÃ§Ã£o local de boas-vindas
+        // Notificação local de boas-vindas
         const reg = await navigator.serviceWorker.ready
-        reg.showNotification('Devocionais ativadas! ð', {
-          body: 'VocÃª receberÃ¡ avisos quando uma nova devocional estiver disponÃ­vel.',
+        reg.showNotification('Devocionais ativadas! 🙏', {
+          body: 'Você receberá avisos quando uma nova devocional estiver disponível.',
           icon: '/icons/icon-192.png',
           badge: '/icons/icon-192.png',
           tag: 'ibc-welcome',
         })
       } else {
-        // Traduz a causa do erro em mensagem amigÃ¡vel
+        // Traduz a causa do erro em mensagem amigável
         switch (result.reason) {
           case 'permission_denied':
             setPushStatus('denied')
             break
           case 'not_supported':
-            setPushErrorMsg('Este navegador nÃ£o suporta notificaÃ§Ãµes push. Use o Chrome ou Edge.')
+            setPushErrorMsg('Este navegador não suporta notificações push. Use o Chrome ou Edge.')
             setPushStatus('error')
             break
           case 'vapid_missing':
-            setPushErrorMsg('ConfiguraÃ§Ã£o do servidor incompleta. Contate o administrador do app.')
+            setPushErrorMsg('Configuração do servidor incompleta. Contate o administrador do app.')
             setPushStatus('error')
             break
           case 'sw_not_ready':
-            setPushErrorMsg('NÃ£o foi possÃ­vel registrar o serviÃ§o em segundo plano. Recarregue o app e tente novamente.')
+            setPushErrorMsg('Não foi possível registrar o serviço em segundo plano. Recarregue o app e tente novamente.')
             setPushStatus('error')
             break
           default:
-            setPushErrorMsg('NÃ£o foi possÃ­vel ativar. Verifique sua conexÃ£o e tente novamente.')
+            setPushErrorMsg('Não foi possível ativar. Verifique sua conexão e tente novamente.')
             setPushStatus('error')
         }
       }
     } catch {
-      setPushErrorMsg('Erro inesperado. Verifique sua conexÃ£o e tente novamente.')
+      setPushErrorMsg('Erro inesperado. Verifique sua conexão e tente novamente.')
       setPushStatus('error')
     }
   }
 
-  // ââ Instalar PWA âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ
+  // ── Instalar PWA ───────────────────────────────────────────────────────────
   const handleInstallApp = async () => {
     if (!deferredPrompt) return
     await deferredPrompt.prompt()
@@ -177,7 +177,7 @@ export default function HomePage() {
 
   const today = format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })
 
-  // ââ Card de notificaÃ§Ãµes (estado dinÃ¢mico) âââââââââââââââââââââââââââââââââ
+  // ── Card de notificações (estado dinâmico) ─────────────────────────────────
   const renderPushCard = () => {
     if (!isPushSupported() && !isIOS()) return null
 
@@ -188,7 +188,7 @@ export default function HomePage() {
           <p className="font-semibold text-primary-800 text-sm mb-1">Instale o app no iPhone</p>
           <p className="text-xs text-primary-600">
             Toque em <strong>Compartilhar</strong> no Safari e depois em{' '}
-            <strong>"Adicionar Ã  Tela de InÃ­cio"</strong> para ativar notificaÃ§Ãµes no iPhone.
+            <strong>"Adicionar à Tela de Início"</strong> para ativar notificações no iPhone.
           </p>
           <button onClick={() => setIosPrompt(false)} className="text-xs text-primary-400 mt-2">
             Fechar
@@ -204,9 +204,9 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <CheckCircle size={22} className="flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm">NotificaÃ§Ãµes ativadas â</p>
+              <p className="font-semibold text-sm">Notificações ativadas ✓</p>
               <p className="text-xs text-white/80">
-                VocÃª serÃ¡ avisado quando houver nova devocional
+                Você será avisado quando houver nova devocional
               </p>
             </div>
           </div>
@@ -214,17 +214,17 @@ export default function HomePage() {
       )
     }
 
-    // UsuÃ¡rio bloqueou as notificaÃ§Ãµes nas configuraÃ§Ãµes do browser
+    // Usuário bloqueou as notificações nas configurações do browser
     if (pushStatus === 'denied') {
       return (
         <Card className="bg-amber-50 border border-amber-200" padding="md">
           <div className="flex items-start gap-3">
             <BellOff size={20} className="text-amber-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-amber-800 text-sm">NotificaÃ§Ãµes bloqueadas pelo navegador</p>
+              <p className="font-semibold text-amber-800 text-sm">Notificações bloqueadas pelo navegador</p>
               <p className="text-xs text-amber-600 mt-0.5">
-                Para ativar: acesse as <strong>ConfiguraÃ§Ãµes do Chrome</strong> â
-                Privacidade e seguranÃ§a â NotificaÃ§Ãµes â localize este site e clique em <strong>Permitir</strong>.
+                Para ativar: acesse as <strong>Configurações do Chrome</strong> →
+                Privacidade e segurança → Notificações → localize este site e clique em <strong>Permitir</strong>.
               </p>
             </div>
           </div>
@@ -232,16 +232,16 @@ export default function HomePage() {
       )
     }
 
-    // Erro ao ativar â mostrar mensagem especÃ­fica + opÃ§Ã£o de tentar novamente
+    // Erro ao ativar — mostrar mensagem específica + opção de tentar novamente
     if (pushStatus === 'error') {
       return (
         <Card className="bg-red-50 border border-red-200" padding="md">
           <div className="flex items-start gap-3">
             <Bell size={20} className="text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-red-700 text-sm">NÃ£o foi possÃ­vel ativar</p>
+              <p className="font-semibold text-red-700 text-sm">Não foi possível ativar</p>
               <p className="text-xs text-red-500 mt-0.5">
-                {pushErrorMsg || 'Verifique as permissÃµes e tente novamente'}
+                {pushErrorMsg || 'Verifique as permissões e tente novamente'}
               </p>
             </div>
             <Button size="sm" variant="secondary" onClick={handlePushSubscribe} className="flex-shrink-0">
@@ -252,7 +252,7 @@ export default function HomePage() {
       )
     }
 
-    // Estado padrÃ£o: idle ou loading â card verde com botÃ£o Ativar
+    // Estado padrão: idle ou loading — card verde com botão Ativar
     return (
       <Card
         className="bg-gradient-to-r from-mint-600 to-mint-500 text-white cursor-pointer active:opacity-90"
@@ -265,8 +265,8 @@ export default function HomePage() {
             <p className="font-semibold text-sm">Receber devocionais</p>
             <p className="text-xs text-white/80">
               {pushStatus === 'loading'
-                ? 'Aguardando permissÃ£o...'
-                : 'Ative as notificaÃ§Ãµes para ser avisado todo dia'}
+                ? 'Aguardando permissão...'
+                : 'Ative as notificações para ser avisado todo dia'}
             </p>
           </div>
           <Button
@@ -288,8 +288,8 @@ export default function HomePage() {
       {/* Header */}
       <div className="bg-gradient-to-br from-primary-900 to-primary-700 px-5 pt-12 pb-8">
         <p className="text-primary-200 text-sm mb-1 capitalize">{today}</p>
-        <h1 className="text-white text-2xl font-bold mb-1">GraÃ§a e paz! ð</h1>
-        <p className="text-primary-300 text-sm">Igreja Batista CanaÃ£ - IBC</p>
+        <h1 className="text-white text-2xl font-bold mb-1">Graça e paz! 🙏</h1>
+        <p className="text-primary-300 text-sm">Igreja Batista Canaã - IBC</p>
       </div>
 
       <div className="px-4 -mt-4 space-y-4">
@@ -301,7 +301,7 @@ export default function HomePage() {
               <Download size={22} className="flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-sm">Instalar o app</p>
-                <p className="text-xs text-white/80">Adicione Ã  tela inicial para acesso rÃ¡pido</p>
+                <p className="text-xs text-white/80">Adicione à tela inicial para acesso rápido</p>
               </div>
               <Button size="sm" variant="gold" onClick={handleInstallApp}>
                 Instalar
@@ -347,14 +347,14 @@ export default function HomePage() {
                 Ler devocional
               </Button>
 
-              {/* ReaÃ§Ãµes */}
+              {/* Reações */}
               <div className="flex gap-3 pt-1">
                 <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                  <span>ð</span>
-                  <span>{todayDevotional.reactions_count?.amen ?? 0} AmÃ©m</span>
+                  <span>🙏</span>
+                  <span>{todayDevotional.reactions_count?.amen ?? 0} Amén</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                  <span>â¨</span>
+                  <span>✨</span>
                   <span>{todayDevotional.reactions_count?.edified ?? 0} Edificados</span>
                 </div>
               </div>
@@ -362,7 +362,7 @@ export default function HomePage() {
           </Card>
         ) : (
           <Card padding="md" className="text-center py-8">
-            <p className="text-4xl mb-3">ð</p>
+            <p className="text-4xl mb-3">📖</p>
             <p className="text-gray-600 font-medium">Nenhuma devocional publicada hoje</p>
             <p className="text-gray-400 text-sm mt-1">Volte mais tarde</p>
           </Card>
@@ -414,7 +414,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-800 text-sm truncate">{d.title}</p>
-                    <p className="text-gray-400 text-xs mt-0.5">{d.bible_reference} Â· {format(new Date(d.publish_date), 'dd/MM', { locale: ptBR })}</p>
+                    <p className="text-gray-400 text-xs mt-0.5">{d.bible_reference} · {format(new Date(d.publish_date), 'dd/MM', { locale: ptBR })}</p>
                   </div>
                   <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
                 </Card>
@@ -441,21 +441,21 @@ export default function HomePage() {
           </div>
         </Card>
 
-        {/* Pedidos de oraÃ§Ã£o */}
+        {/* Pedidos de oração */}
         <Card padding="md" className="cursor-pointer" onClick={() => navigate('/app/oracao')}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center flex-shrink-0">
               <Heart size={18} className="text-red-500" />
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-gray-800 text-sm">Pedidos de oraÃ§Ã£o</p>
+              <p className="font-semibold text-gray-800 text-sm">Pedidos de oração</p>
               <p className="text-gray-400 text-xs mt-0.5">Envie ou veja pedidos da comunidade</p>
             </div>
             <ChevronRight size={16} className="text-gray-300" />
           </div>
         </Card>
 
-        {/* CÃ©lulas */}
+        {/* Células */}
         <Card
           padding="none"
           className="overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
@@ -466,11 +466,11 @@ export default function HomePage() {
             style={{ background: 'linear-gradient(135deg, #1a3f7a 0%, #0d2654 100%)' }}
           >
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: 'rgba(255,255,255,0.15)' }}>
-              ð¥
+              👥
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white font-bold text-sm">CÃ©lulas</p>
-              <p className="text-white/70 text-xs mt-0.5">Homens Posicionados Â· Mulheres de ExcelÃªncia</p>
+              <p className="text-white font-bold text-sm">Células</p>
+              <p className="text-white/70 text-xs mt-0.5">Homens Posicionados · Mulheres de Excelência</p>
             </div>
             <div className="flex items-center gap-2">
               <div className="px-3 py-1.5 rounded-xl text-xs font-semibold" style={{ background: '#c9a84c', color: '#1a1a1a' }}>
@@ -482,7 +482,7 @@ export default function HomePage() {
         </Card>
       </div>
 
-      {/* ââ Modal PIX âââââââââââââââââââââââââââââââââââââââââââââââââââââââââââ */}
+      {/* ── Modal PIX ─────────────────────────────────────────────────────────── */}
       {showPix && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center"
@@ -506,7 +506,7 @@ export default function HomePage() {
               </button>
             </div>
 
-            {/* Card azul com Ã­cone PIX */}
+            {/* Card azul com ícone PIX */}
             <div className="bg-gradient-to-br from-primary-900 to-primary-700 rounded-2xl p-5 mb-5 text-white">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center flex-shrink-0">
@@ -514,7 +514,7 @@ export default function HomePage() {
                 </div>
                 <div>
                   <p className="font-bold text-base leading-tight">{PIX_NAME}</p>
-                  <p className="text-primary-300 text-xs mt-0.5">ContribuiÃ§Ã£o Ã  Igreja</p>
+                  <p className="text-primary-300 text-xs mt-0.5">Contribuição à Igreja</p>
                 </div>
               </div>
 
@@ -524,7 +524,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* BotÃ£o copiar */}
+            {/* Botão copiar */}
             <button
               onClick={handleCopyPix}
               className={`w-full py-4 rounded-2xl font-semibold text-base flex items-center justify-center gap-2 transition-all active:scale-95 ${

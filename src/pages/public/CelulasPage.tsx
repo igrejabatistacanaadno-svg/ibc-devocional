@@ -5,23 +5,23 @@ import { celulasApi } from '@/lib/supabase'
 import type { Celula } from '@/types'
 import Header from '@/components/layout/Header'
 
-// ConfiguraÃ§Ãµes visuais por slug
+// Configurações visuais por slug
 const CELULA_THEMES: Record<string, { gradient: string; emoji: string; accent: string }> = {
   'homens-posicionados': {
     gradient: 'linear-gradient(135deg, #0d2654 0%, #1a3f7a 50%, #0d2654 100%)',
-    emoji: 'ð¡ï¸',
+    emoji: '🛡️',
     accent: '#c9a84c',
   },
   'mulheres-de-excelencia': {
     gradient: 'linear-gradient(135deg, #4a1456 0%, #7b2d8b 50%, #4a1456 100%)',
-    emoji: 'â¨',
+    emoji: '✨',
     accent: '#e8a0d0',
   },
 }
 
 const DEFAULT_THEME = {
   gradient: 'linear-gradient(135deg, #0d2654 0%, #1a3f7a 100%)',
-  emoji: 'âª',
+  emoji: '⛪',
   accent: '#c9a84c',
 }
 
@@ -39,22 +39,22 @@ export default function CelulasPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header title="CÃ©lulas" />
+      <Header title="Células" />
 
       <div className="px-4 pt-4 pb-8 space-y-5">
 
-        {/* IntroduÃ§Ã£o */}
+        {/* Introdução */}
         <div className="text-center py-2">
           <div className="w-14 h-14 rounded-2xl bg-primary-100 flex items-center justify-center mx-auto mb-3">
             <Users size={26} className="text-primary-700" />
           </div>
-          <h2 className="text-gray-800 font-bold text-lg">Grupos de CÃ©lula</h2>
+          <h2 className="text-gray-800 font-bold text-lg">Grupos de Célula</h2>
           <p className="text-gray-500 text-sm mt-1 max-w-xs mx-auto">
-            Conecte-se com sua cÃ©lula, acompanhe materiais e participe das interaÃ§Ãµes
+            Conecte-se com sua célula, acompanhe materiais e participe das interações
           </p>
         </div>
 
-        {/* Cards das cÃ©lulas */}
+        {/* Cards das células */}
         {loading ? (
           <div className="space-y-4">
             {[1, 2].map(i => (
@@ -63,9 +63,9 @@ export default function CelulasPage() {
           </div>
         ) : celulas.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-4xl mb-3">âª</p>
-            <p className="text-gray-500 font-medium">Nenhuma cÃ©lula disponÃ­vel</p>
-            <p className="text-gray-400 text-sm mt-1">Verifique com a lideranÃ§a</p>
+            <p className="text-4xl mb-3">⛪</p>
+            <p className="text-gray-500 font-medium">Nenhuma célula disponível</p>
+            <p className="text-gray-400 text-sm mt-1">Verifique com a liderança</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -104,7 +104,7 @@ export default function CelulasPage() {
                         className="px-3 py-1 rounded-full text-xs font-semibold"
                         style={{ background: 'rgba(255,255,255,0.15)', color: 'white' }}
                       >
-                        CÃ©lula ativa
+                        Célula ativa
                       </div>
                     </div>
 
@@ -118,16 +118,16 @@ export default function CelulasPage() {
                       )}
                       {(celula.meeting_day || celula.meeting_time) && (
                         <p className="text-white/60 text-xs mb-4">
-                          ð {[celula.meeting_day, celula.meeting_time, celula.meeting_location].filter(Boolean).join(' Â· ')}
+                          📅 {[celula.meeting_day, celula.meeting_time, celula.meeting_location].filter(Boolean).join(' · ')}
                         </p>
                       )}
 
-                      {/* BotÃ£o */}
+                      {/* Botão */}
                       <div
                         className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all"
                         style={{ background: theme.accent, color: '#1a1a1a' }}
                       >
-                        Acessar cÃ©lula
+                        Acessar célula
                         <ChevronRight size={16} />
                       </div>
                     </div>

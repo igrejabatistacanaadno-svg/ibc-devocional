@@ -243,17 +243,150 @@ export const financialReportsApi = {
     supabase.from('financial_reports').insert(data).select().single(),
 
   update: (id: string, data: Record<string, unknown>) =>
-    supabase.from('financial_reports').update(data).eq('id', id),
+    supabase.from('financial_reports').update(data).eq('id', id).select().single(),
 
   delete: (id: string) =>
     supabase.from('financial_reports').delete().eq('id', id),
-
-  updateStatus: (id: string, status: string) =>
-    supabase.from('financial_reports').update({ status }).eq('id', id),
 }
-
 
 // --- Dashboard Stats ---------------------------------------------------------
 export const dashboardApi = {
   getStats: () => supabase.rpc('get_dashboard_stats'),
+}
+
+// --- CÃ©lulas -----------------------------------------------------------------
+export const celulasApi = {
+  getAll: () =>
+    supabase.from('celulas').select('*').eq('active', true).order('name'),
+
+  getBySlug: (slug: string) =>
+    supabase.from('celulas').select('*').eq('slug', slug).single(),
+
+  update: (id: string, data: Record<string, unknown>) =>
+    supabase.from('celulas').update(data).eq('id', id).select().single(),
+}
+
+export const celulaPostsApi = {
+  getPublished: (celulaId: string) =>
+    supabase
+      .from('celula_posts')
+      .select('*')
+      .eq('celula_id', celulaId)
+      .eq('status', 'published')
+      .order('pinned', { ascending: false })
+      .order('created_at', { ascending: false }),
+
+  getAll: (celulaId: string) =>
+    supabase
+      .from('celula_posts')
+      .select('*')
+      .eq('celula_id', celulaId)
+      .order('pinned', { ascending: false })
+      .order('created_at', { ascending: false }),
+
+  getById: (id: string) =>
+    supabase.from('celula_posts').select('*').eq('id', id).single(),
+
+  create: (data: Record<string, unknown>) =>
+    supabase.from('celula_posts').insert(data).select().single(),
+
+  update: (id: string, data: Record<string, unknown>) =>
+    supabase.from('celula_posts').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single(),
+
+  delete: (id: string) =>
+    supabase.from('celula_posts').delete().eq('id', id),
+}
+
+export const celulaInteracoesApi = {
+  // ConfirmaÃ§Ã£o de leitura
+  markRead: (postId: string, deviceId: string) =>
+    supabase
+      .from('celula_leituras')
+      .upsert({ post_id: postId, device_id: deviceId }, { onConflict: 'post_id,device_id' }),
+
+  getReadCount: (postId: string) =>
+    supabase
+      .from('celula_leituras')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', postId),
+
+  userRead: (postId: string, deviceId: string) =>
+    supabase
+      .from('celula_leituras')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('device_id', deviceId)
+      .maybeSingle(),
+
+  // ConfirmaÃ§Ã£o de presenÃ§a
+  confirmPresence: (postId: string, deviceId: string, authorName: string) =>
+    supabase
+      .from('celula_presencas')
+      .upsert({ post_id: postId, device_id: deviceId, author_name: authorName }, { onConflict: 'post_id,device_id' }),
+
+  getPresences: (postId: string) =>
+    supabase
+      .from('celula_presencas')
+      .select('*')
+      .eq('post_id', postId)
+      .order('created_at'),
+
+  userPresence: (postId: string, deviceId: string) =>
+    supabase
+      .from('celula_presencas')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('device_id', deviceId)
+      .maybeSingle(),
+
+  // ComentÃ¡rios/InteraÃ§Ãµes
+  getComments: (postId: string) =>
+    supabase
+      .from('celula_comments')
+      .select('*')
+      .eq('post_id', postId)
+      .eq('status', 'approved')
+      .order('created_at'),
+
+  addComment: (data: { post_id: string; author_name: string; comment_text: string }) =>
+    supabase
+      .from('celula_comments')
+      .insert({ ...data, status: 'approved' })
+      .select()
+      .single(),
+
+  deleteComment: (id: string) =>
+    supabase.from('celula_comments').delete().eq('id', id),
+
+  getAllCommentsByPost: (postId: string) =>
+    supabase
+      .from('celula_comments')
+      .select('*')
+      .eq('post_id', postId)
+      .order('created_at'),
+}
+
+export const celulaMaterialsApi = {
+  uploadPdf: async (file: File, path: string) => {
+    const { data, error } = await supabase.storage
+      .from('celula-materiais')
+      .upload(path, file, { contentType: file.type, upsert: true })
+    if (error) throw error
+    const { data: urlData } = supabase.storage.from('celula-materiais').getPublicUrl(data.path)
+    return urlData.publicUrl
+  },
+
+  uploadCover: async (file: File, path: string) => {
+    const { data, error } = await supabase.storage
+      .from('celula-materiais')
+      .upload(path, file, { contentType: file.type, upsert: true })
+    if (error) throw error
+    const { data: urlData } = supabase.storage.from('celula-materiais').getPublicUrl(data.path)
+    return urlData.publicUrl
+  },
+
+  deletePath: async (path: string) => {
+    const { error } = await supabase.storage.from('celula-materiais').remove([path])
+    if (error) throw error
+  },
 }

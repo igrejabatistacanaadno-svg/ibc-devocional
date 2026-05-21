@@ -1,5 +1,5 @@
 // --- Devotional --------------------------------------------------------------
-export type DevotionalStatus = 'draft' | 'scheduled' | 'published'
+export type DevotionalStatus = 'draft' | 'scheduled' | 'published' | 'cancelled'
 
 export interface Devotional {
   id: string
@@ -129,7 +129,7 @@ export interface FinancialReport {
   id: string
   title: string
   description: string | null
-  reference_month: number   // 1–12
+  reference_month: number   // 1â12
   reference_year: number
   pdf_url: string
   status: FinancialReportStatus
@@ -145,4 +145,61 @@ export interface DashboardStats {
   approvedComments: number
   pushSubscribers: number
   lastNotificationSent: string | null
+}
+
+// --- CÃ©lula ------------------------------------------------------------------
+export type CelulaPostType = 'comunicado' | 'aviso' | 'pdf_curso' | 'pregacao' | 'interacao'
+export type CelulaPostStatus = 'draft' | 'published'
+
+export interface Celula {
+  id: string
+  slug: string
+  name: string
+  description: string | null
+  cover_image_url: string | null
+  leader_name: string | null
+  meeting_day: string | null
+  meeting_time: string | null
+  meeting_location: string | null
+  active: boolean
+  created_at: string
+}
+
+export interface CelulaPost {
+  id: string
+  celula_id: string
+  type: CelulaPostType
+  title: string
+  content: string | null
+  pdf_url: string | null
+  video_url: string | null
+  audio_url: string | null
+  pinned: boolean
+  status: CelulaPostStatus
+  created_by: string
+  created_at: string
+  updated_at: string
+  // computed
+  read_count?: number
+  presence_count?: number
+  comments_count?: number
+  user_read?: boolean
+  user_presence?: boolean
+}
+
+export interface CelulaComment {
+  id: string
+  post_id: string
+  author_name: string
+  comment_text: string
+  status: string
+  created_at: string
+}
+
+export interface CelulaPresenca {
+  id: string
+  post_id: string
+  device_id: string
+  author_name: string | null
+  created_at: string
 }

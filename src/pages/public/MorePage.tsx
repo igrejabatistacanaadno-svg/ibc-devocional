@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { User, Bell, Smartphone, LogOut, ChevronRight, Trash2, Landmark } from 'lucide-react'
+import { User, Bell, Smartphone, LogOut, ChevronRight, Trash2, Landmark, QrCode, Users } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { unsubscribeFromPush } from '@/lib/pushNotifications'
 import Card from '@/components/ui/Card'
@@ -11,7 +11,7 @@ export default function MorePage() {
   const savedName = localStorage.getItem('ibc_comment_name') ?? ''
 
   const handleClearData = () => {
-    if (confirm('Isso apagará seu nome salvo e preferências locais. Continuar?')) {
+    if (confirm('Isso apagarÃ¡ seu nome salvo e preferÃªncias locais. Continuar?')) {
       localStorage.removeItem('ibc_comment_name')
       unsubscribeFromPush()
     }
@@ -29,10 +29,22 @@ export default function MorePage() {
       section: 'Igreja',
       items: [
         {
+          icon: Users,
+          label: 'CÃ©lulas',
+          sub: 'Grupos de cÃ©lula da igreja',
+          action: () => navigate('/app/celulas'),
+        },
+        {
           icon: Landmark,
           label: 'Tesouraria',
-          sub: 'Relatórios financeiros da igreja',
+          sub: 'RelatÃ³rios financeiros da igreja',
           action: () => navigate('/app/tesouraria'),
+        },
+        {
+          icon: QrCode,
+          label: 'PIX / Dados BancÃ¡rios',
+          sub: 'Copiar chave PIX ou dados para transferÃªncia',
+          action: () => navigate('/app/pix'),
         },
       ],
     },
@@ -41,14 +53,14 @@ export default function MorePage() {
       items: [
         {
           icon: User,
-          label: savedName ? `Olá, ${savedName}` : 'Seu nome local',
-          sub: savedName ? 'Nome usado nos comentários' : 'Será salvo ao comentar',
+          label: savedName ? `OlÃ¡, ${savedName}` : 'Seu nome local',
+          sub: savedName ? 'Nome usado nos comentÃ¡rios' : 'SerÃ¡ salvo ao comentar',
           action: undefined,
         },
         {
           icon: Bell,
-          label: 'Notificações',
-          sub: 'Gerenciar notificações push',
+          label: 'NotificaÃ§Ãµes',
+          sub: 'Gerenciar notificaÃ§Ãµes push',
           action: undefined,
         },
       ],
@@ -59,7 +71,7 @@ export default function MorePage() {
         {
           icon: Smartphone,
           label: 'Instalar no Android',
-          sub: 'Chrome ou Edge: Adicionar à tela inicial',
+          sub: 'Chrome ou Edge: Adicionar Ã  tela inicial',
           action: () => navigate('/app/instalar/android'),
         },
         {
@@ -76,7 +88,7 @@ export default function MorePage() {
         {
           icon: Trash2,
           label: 'Limpar dados locais',
-          sub: 'Remove nome e preferências salvas',
+          sub: 'Remove nome e preferÃªncias salvas',
           action: handleClearData,
         },
         {
@@ -98,7 +110,7 @@ export default function MorePage() {
         <Card padding="md" className="flex items-center gap-3 bg-gradient-to-r from-primary-800 to-primary-700">
           <img src="/icons/icon.svg" alt="IBC" className="w-10 h-10 rounded-xl flex-shrink-0" />
           <div>
-            <p className="font-bold text-white text-sm">Igreja Batista Canaã</p>
+            <p className="font-bold text-white text-sm">Igreja Batista CanaÃ£</p>
             <p className="text-primary-300 text-xs">@igrejabatistaibc</p>
           </div>
         </Card>
@@ -128,7 +140,7 @@ export default function MorePage() {
           </div>
         ))}
 
-        <p className="text-center text-gray-400 text-xs">IBC Devocional v1.0 - Igreja Batista Canaã</p>
+        <p className="text-center text-gray-400 text-xs">IBC Devocional v1.0 - Igreja Batista CanaÃ£</p>
       </div>
     </div>
   )

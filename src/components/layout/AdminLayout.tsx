@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, BookOpen, Mic, Music, MessageSquare,
-  Heart, Bell, Megaphone, Settings, LogOut, Menu, X, Landmark,
+  Heart, Bell, Megaphone, Settings, LogOut, Menu, X, Landmark, Users,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
@@ -11,12 +11,13 @@ const adminNav = [
   { to: '/admin/devocionais',      label: 'Devocionais',       icon: BookOpen         },
   { to: '/admin/nova-devocional',  label: 'Nova devocional',   icon: Mic              },
   { to: '/admin/musicas',          label: 'Biblioteca musical',icon: Music            },
-  { to: '/admin/comentarios',      label: 'Comentários',       icon: MessageSquare    },
-  { to: '/admin/oracao',           label: 'Pedidos de oração', icon: Heart            },
+  { to: '/admin/comentarios',      label: 'ComentÃ¡rios',       icon: MessageSquare    },
+  { to: '/admin/oracao',           label: 'Pedidos de oraÃ§Ã£o', icon: Heart            },
   { to: '/admin/avisos',           label: 'Avisos',            icon: Megaphone        },
   { to: '/admin/tesouraria',       label: 'Tesouraria',        icon: Landmark         },
-  { to: '/admin/notificacoes',     label: 'Notificações',      icon: Bell             },
-  { to: '/admin/configuracoes',    label: 'Configurações',     icon: Settings         },
+  { to: '/admin/celulas',          label: 'CÃ©lulas',           icon: Users            },
+  { to: '/admin/notificacoes',     label: 'NotificaÃ§Ãµes',      icon: Bell             },
+  { to: '/admin/configuracoes',    label: 'ConfiguraÃ§Ãµes',     icon: Settings         },
 ]
 
 export default function AdminLayout() {

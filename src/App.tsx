@@ -10,6 +10,9 @@ import PrayerPage           from '@/pages/public/PrayerPage'
 import AnnouncementsPage    from '@/pages/public/AnnouncementsPage'
 import MorePage             from '@/pages/public/MorePage'
 import TesourariaPage       from '@/pages/public/TesourariaPage'
+import PixPage              from '@/pages/public/PixPage'
+import CelulasPage          from '@/pages/public/CelulasPage'
+import CelulaDetailPage     from '@/pages/public/CelulaDetailPage'
 
 // Admin pages
 import AdminLoginPage        from '@/pages/admin/AdminLoginPage'
@@ -21,6 +24,7 @@ import AdminPrayerPage       from '@/pages/admin/AdminPrayerPage'
 import AdminAnnouncementsPage       from '@/pages/admin/AdminAnnouncementsPage'
 import EditDevotionalPage           from '@/pages/admin/EditDevotionalPage'
 import AdminFinancialReportsPage    from '@/pages/admin/AdminFinancialReportsPage'
+import AdminCelulasPage            from '@/pages/admin/AdminCelulasPage'
 
 // Layouts
 import MemberLayout from '@/components/layout/MemberLayout'
@@ -58,6 +62,9 @@ function AppRoutes() {
         <Route path="avisos"              element={<AnnouncementsPage />} />
         <Route path="mais"                element={<MorePage />} />
         <Route path="tesouraria"          element={<TesourariaPage />} />
+        <Route path="pix"                 element={<PixPage />} />
+        <Route path="celulas"             element={<CelulasPage />} />
+        <Route path="celula/:slug"        element={<CelulaDetailPage />} />
       </Route>
 
       {/* Admin area */}
@@ -71,10 +78,11 @@ function AppRoutes() {
         <Route path="oracao"            element={<AdminPrayerPage />} />
         <Route path="avisos"            element={<AdminAnnouncementsPage />} />
         <Route path="tesouraria"        element={<AdminFinancialReportsPage />} />
+        <Route path="celulas"           element={<AdminCelulasPage />} />
         {/* Stubs for future pages */}
         <Route path="musicas"           element={<div className="p-6 text-gray-500">Biblioteca musical - em breve</div>} />
-        <Route path="notificacoes"      element={<div className="p-6 text-gray-500">Notificações - em breve</div>} />
-        <Route path="configuracoes"     element={<div className="p-6 text-gray-500">Configurações - em breve</div>} />
+        <Route path="notificacoes"      element={<div className="p-6 text-gray-500">NotificaÃ§Ãµes - em breve</div>} />
+        <Route path="configuracoes"     element={<div className="p-6 text-gray-500">ConfiguraÃ§Ãµes - em breve</div>} />
       </Route>
 
       {/* Fallback */}

@@ -11,19 +11,19 @@ const POST_TYPES: { value: CelulaPostType; label: string; icon: React.ElementTyp
   { value: 'comunicado', label: 'Comunicado', icon: Megaphone,     color: 'blue'   },
   { value: 'aviso',      label: 'Aviso',      icon: Bell,          color: 'amber'  },
   { value: 'pdf_curso',  label: 'PDF/Curso',  icon: FileText,      color: 'red'    },
-  { value: 'pregacao',   label: 'PregaÃ§Ã£o',   icon: Mic2,          color: 'purple' },
-  { value: 'interacao',  label: 'InteraÃ§Ã£o',  icon: MessageCircle, color: 'green'  },
+  { value: 'pregacao',   label: 'Pregação',   icon: Mic2,          color: 'purple' },
+  { value: 'interacao',  label: 'Interação',  icon: MessageCircle, color: 'green'  },
 ]
 
 const TYPE_BADGE: Record<CelulaPostType, { label: string; cls: string }> = {
   comunicado: { label: 'Comunicado', cls: 'bg-blue-100 text-blue-700' },
   aviso:      { label: 'Aviso',      cls: 'bg-amber-100 text-amber-700' },
   pdf_curso:  { label: 'PDF/Curso',  cls: 'bg-red-100 text-red-700' },
-  pregacao:   { label: 'PregaÃ§Ã£o',   cls: 'bg-purple-100 text-purple-700' },
-  interacao:  { label: 'InteraÃ§Ã£o',  cls: 'bg-green-100 text-green-700' },
+  pregacao:   { label: 'Pregação',   cls: 'bg-purple-100 text-purple-700' },
+  interacao:  { label: 'Interação',  cls: 'bg-green-100 text-green-700' },
 }
 
-// --- FormulÃ¡rio de post ------------------------------------------------------
+// --- Formulário de post ------------------------------------------------------
 interface PostFormState {
   id?: string
   celula_id: string
@@ -122,21 +122,21 @@ function PostModal({
             </div>
           </div>
 
-          {/* TÃ­tulo */}
+          {/* Título */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">TÃ­tulo *</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Título *</label>
             <input
               type="text"
               value={form.title}
               onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-              placeholder="TÃ­tulo do post"
+              placeholder="Título do post"
               className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400"
             />
           </div>
 
-          {/* ConteÃºdo */}
+          {/* Conteúdo */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">ConteÃºdo</label>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Conteúdo</label>
             <textarea
               value={form.content}
               onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
@@ -182,10 +182,10 @@ function PostModal({
             />
           </div>
 
-          {/* URL de vÃ­deo */}
+          {/* URL de vídeo */}
           <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-              Link de vÃ­deo (YouTube / outros)
+              Link de vídeo (YouTube / outros)
             </label>
             <input
               type="url"
@@ -196,7 +196,7 @@ function PostModal({
             />
           </div>
 
-          {/* OpÃ§Ãµes */}
+          {/* Opções */}
           <div className="flex gap-3">
             <button
               onClick={() => setForm(f => ({ ...f, pinned: !f.pinned }))}
@@ -224,7 +224,7 @@ function PostModal({
           </div>
         </div>
 
-        {/* BotÃµes */}
+        {/* Botões */}
         <div className="flex gap-3 mt-6">
           <button
             onClick={onClose}
@@ -345,11 +345,11 @@ export default function AdminCelulasPage() {
 
   return (
     <div>
-      {/* CabeÃ§alho */}
+      {/* Cabeçalho */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">CÃ©lulas</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Gerencie o conteÃºdo dos grupos de cÃ©lula</p>
+          <h1 className="text-xl font-bold text-gray-900">Células</h1>
+          <p className="text-gray-500 text-sm mt-0.5">Gerencie o conteúdo dos grupos de célula</p>
         </div>
         <button
           onClick={openNew}
@@ -361,7 +361,7 @@ export default function AdminCelulasPage() {
         </button>
       </div>
 
-      {/* Seletor de cÃ©lula */}
+      {/* Seletor de célula */}
       <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
         {celulas.map(c => (
           <button
@@ -387,9 +387,9 @@ export default function AdminCelulasPage() {
         </div>
       ) : posts.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center">
-          <p className="text-3xl mb-3">ð­</p>
-          <p className="text-gray-600 font-medium">Nenhum post nesta cÃ©lula</p>
-          <p className="text-gray-400 text-sm mt-1">Clique em "Novo post" para comeÃ§ar</p>
+          <p className="text-3xl mb-3">📭</p>
+          <p className="text-gray-600 font-medium">Nenhum post nesta célula</p>
+          <p className="text-gray-400 text-sm mt-1">Clique em "Novo post" para começar</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -426,12 +426,12 @@ export default function AdminCelulasPage() {
                       <p className="text-gray-400 text-xs mt-0.5 line-clamp-1">{post.content}</p>
                     )}
                     {post.pdf_url && (
-                      <p className="text-red-500 text-xs mt-0.5">ð PDF anexado</p>
+                      <p className="text-red-500 text-xs mt-0.5">📎 PDF anexado</p>
                     )}
                   </div>
                 </div>
 
-                {/* AÃ§Ãµes */}
+                {/* Ações */}
                 <div className="border-t border-gray-50 px-4 py-2.5 flex items-center gap-2">
                   <button
                     onClick={() => openEdit(post)}

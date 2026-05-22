@@ -254,7 +254,7 @@ export const dashboardApi = {
   getStats: () => supabase.rpc('get_dashboard_stats'),
 }
 
-// --- CÃ©lulas -----------------------------------------------------------------
+// --- Células -----------------------------------------------------------------
 export const celulasApi = {
   getAll: () =>
     supabase.from('celulas').select('*').eq('active', true).order('name'),
@@ -298,7 +298,7 @@ export const celulaPostsApi = {
 }
 
 export const celulaInteracoesApi = {
-  // ConfirmaÃ§Ã£o de leitura
+  // Confirmação de leitura
   markRead: (postId: string, deviceId: string) =>
     supabase
       .from('celula_leituras')
@@ -318,7 +318,7 @@ export const celulaInteracoesApi = {
       .eq('device_id', deviceId)
       .maybeSingle(),
 
-  // ConfirmaÃ§Ã£o de presenÃ§a
+  // Confirmação de presença
   confirmPresence: (postId: string, deviceId: string, authorName: string) =>
     supabase
       .from('celula_presencas')
@@ -339,7 +339,7 @@ export const celulaInteracoesApi = {
       .eq('device_id', deviceId)
       .maybeSingle(),
 
-  // ComentÃ¡rios/InteraÃ§Ãµes
+  // Comentários/Interações
   getComments: (postId: string) =>
     supabase
       .from('celula_comments')
@@ -364,6 +364,71 @@ export const celulaInteracoesApi = {
       .select('*')
       .eq('post_id', postId)
       .order('created_at'),
+}
+
+// --- Cursos / Materiais ------------------------------------------------------
+export const cursosApi = {
+  getPublished: () =>
+    supabase
+      .from('cursos')
+      .select('*')
+      .eq('status', 'published')
+      .lte('publish_date', new Date().toISOString())
+      .order('publish_date', { ascending: false }),
+
+  getByCategory: (category: string) =>
+    supabase
+      .from('cursos')
+      .select('*')
+      .eq('status', 'published')
+      .eq('category', category)
+      .lte('publish_date', new Date().toISOString())
+      .order('publish_date', { ascending: false }),
+
+  getAll: () =>
+    supabase.from('cursos').select('*').order('created_at', { ascending: false }),
+
+  getById: (id: string) =>
+    supabase.from('cursos').select('*').eq('id', id).single(),
+
+  create: (data: Record<string, unknown>) =>
+    supabase.from('cursos').insert(data).select().single(),
+
+  update: (id: string, data: Record<string, unknown>) =>
+    supabase
+      .from('cursos')
+      .update({ ...data, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single(),
+
+  delete: (id: string) =>
+    supabase.from('cursos').delete().eq('id', id),
+}
+
+export const cursosPdfsApi = {
+  uploadPdf: async (file: File, path: string) => {
+    const { data, error } = await supabase.storage
+      .from('cursos-pdfs')
+      .upload(path, file, { contentType: 'application/pdf', upsert: true })
+    if (error) throw error
+    const { data: urlData } = supabase.storage.from('cursos-pdfs').getPublicUrl(data.path)
+    return urlData.publicUrl
+  },
+
+  uploadCover: async (file: File, path: string) => {
+    const { data, error } = await supabase.storage
+      .from('cursos-pdfs')
+      .upload(path, file, { contentType: file.type, upsert: true })
+    if (error) throw error
+    const { data: urlData } = supabase.storage.from('cursos-pdfs').getPublicUrl(data.path)
+    return urlData.publicUrl
+  },
+
+  deletePath: async (path: string) => {
+    const { error } = await supabase.storage.from('cursos-pdfs').remove([path])
+    if (error) throw error
+  },
 }
 
 export const celulaMaterialsApi = {

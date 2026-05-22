@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, BookOpen, Mic, Music, MessageSquare,
-  Heart, Bell, Megaphone, Settings, LogOut, Menu, X, Landmark, Users,
+  Heart, Bell, Megaphone, Settings, LogOut, Menu, X, Landmark, Users, GraduationCap,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
@@ -16,6 +16,7 @@ const adminNav = [
   { to: '/admin/avisos',           label: 'Avisos',            icon: Megaphone        },
   { to: '/admin/tesouraria',       label: 'Tesouraria',        icon: Landmark         },
   { to: '/admin/celulas',          label: 'Células',           icon: Users            },
+  { to: '/admin/cursos',           label: 'Cursos',            icon: GraduationCap    },
   { to: '/admin/notificacoes',     label: 'Notificações',      icon: Bell             },
   { to: '/admin/configuracoes',    label: 'Configurações',     icon: Settings         },
 ]
@@ -61,7 +62,7 @@ export default function AdminLayout() {
                 `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                   isActive
                     ? 'bg-primary-700 text-white'
-                    : 'text-primary-200 hover:bw-primary-800 hover:text-white'
+                    : 'text-primary-200 hover:bg-primary-800 hover:text-white'
                 }`
               }
             >

@@ -1,12 +1,13 @@
 import { NavLink } from 'react-router-dom'
-import { Home, BookOpen, Heart, Bell, MoreHorizontal } from 'lucide-react'
+import { Home, BookOpen, Heart, Bell, MoreHorizontal, GraduationCap } from 'lucide-react'
 
 const navItems = [
-  { to: '/app',          label: 'Início',      icon: Home        },
-  { to: '/app/devocionais', label: 'Devocionais', icon: BookOpen    },
-  { to: '/app/oracao',   label: 'Oração',      icon: Heart       },
-  { to: '/app/avisos',   label: 'Avisos',      icon: Bell        },
-  { to: '/app/mais',     label: 'Mais',        icon: MoreHorizontal },
+  { to: '/app',             label: 'Início',      icon: Home           },
+  { to: '/app/devocionais', label: 'Devocionais', icon: BookOpen       },
+  { to: '/app/oracao',      label: 'Oração',      icon: Heart          },
+  { to: '/app/cursos',      label: 'Cursos',      icon: GraduationCap  },
+  { to: '/app/avisos',      label: 'Avisos',      icon: Bell           },
+  { to: '/app/mais',        label: 'Mais',        icon: MoreHorizontal },
 ]
 
 export default function BottomNav() {

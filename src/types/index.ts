@@ -129,7 +129,7 @@ export interface FinancialReport {
   id: string
   title: string
   description: string | null
-  reference_month: number   // 1â12
+  reference_month: number   // 1–12
   reference_year: number
   pdf_url: string
   status: FinancialReportStatus
@@ -147,7 +147,7 @@ export interface DashboardStats {
   lastNotificationSent: string | null
 }
 
-// --- CÃ©lula ------------------------------------------------------------------
+// --- Célula ------------------------------------------------------------------
 export type CelulaPostType = 'comunicado' | 'aviso' | 'pdf_curso' | 'pregacao' | 'interacao'
 export type CelulaPostStatus = 'draft' | 'published'
 
@@ -194,6 +194,29 @@ export interface CelulaComment {
   comment_text: string
   status: string
   created_at: string
+}
+
+// --- Curso / Material --------------------------------------------------------
+export type CursoCategory =
+  | 'curso_pdf'
+  | 'devocional'
+  | 'estudo_biblico'
+  | 'apostila'
+  | 'material_apoio'
+
+export type CursoStatus = 'draft' | 'published'
+
+export interface Curso {
+  id: string
+  title: string
+  description: string | null
+  category: CursoCategory
+  pdf_url: string | null
+  cover_image_url: string | null
+  status: CursoStatus
+  publish_date: string
+  created_at: string
+  updated_at: string
 }
 
 export interface CelulaPresenca {
